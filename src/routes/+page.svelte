@@ -97,13 +97,11 @@
 </main>
 
 {#if showNewForm}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="modal-backdrop" onclick={resetForm} onkeydown={(e) => e.key === 'Escape' && resetForm()}>
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div class="modal" onclick={(e) => e.stopPropagation()}>
+	<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="New Project" onclick={resetForm} onkeydown={(e) => e.key === 'Escape' && resetForm()}>
+		<div class="modal" role="document" onclick={(e) => e.stopPropagation()}>
 			<div class="modal-header">
 				<h2 class="modal-title">New Project</h2>
-				<button type="button" class="modal-close" onclick={resetForm}>
+				<button type="button" class="modal-close" aria-label="Close" onclick={resetForm}>
 					<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
 						<path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
 					</svg>
@@ -142,7 +140,7 @@
 				</div>
 
 				<div class="emi-mode-section">
-					<label class="emi-mode-label">Monthly EMI</label>
+					<span class="emi-mode-label">Monthly EMI</span>
 					<div class="emi-toggle">
 						<button
 							type="button"

@@ -12,21 +12,42 @@
 
 	let svgEl: SVGSVGElement;
 	let wrapperEl: HTMLDivElement;
+	let tooltipEl: HTMLDivElement;
 	let chartWidth = $state(0);
 	const chartHeight = 300;
 
+	let hasAnimated = false;
+	let isVisible = $state(false);
+
 	onMount(() => {
-		const observer = new ResizeObserver((entries) => {
+		const resizeObs = new ResizeObserver((entries) => {
 			for (const entry of entries) {
 				chartWidth = entry.contentRect.width;
 			}
 		});
-		observer.observe(wrapperEl);
-		return () => observer.disconnect();
+		resizeObs.observe(wrapperEl);
+
+		const intersectObs = new IntersectionObserver((entries) => {
+			if (entries[0].isIntersecting) {
+				isVisible = true;
+				intersectObs.disconnect();
+			}
+		}, { threshold: 0.2 });
+		intersectObs.observe(wrapperEl);
+
+		return () => {
+			resizeObs.disconnect();
+			intersectObs.disconnect();
+		};
 	});
 
+	function formatVal(label: string, val: number): string {
+		if (label.includes('Interest')) return formatCurrency(val);
+		return String(val);
+	}
+
 	$effect(() => {
-		if (!svgEl || chartWidth <= 0 || !savings) return;
+		if (!svgEl || chartWidth <= 0 || !savings || !isVisible) return;
 		const width = chartWidth;
 		const height = chartHeight;
 
@@ -70,41 +91,99 @@
 			.style('font-size', '10px')
 			.style('font-family', 'var(--font)');
 
+		const tooltip = d3.select(tooltipEl);
+
 		const groups = g.selectAll('.group')
 			.data(data)
 			.join('g')
 			.attr('transform', (d) => `translate(${x0(d.label)},0)`);
 
-		groups.append('rect')
+		const animate = !hasAnimated;
+
+		// Original bars
+		const origBars = groups.append('rect')
 			.attr('x', x1('original')!)
-			.attr('y', (d) => y(d.original))
+			.attr('y', animate ? h : (d) => y(d.original))
 			.attr('width', x1.bandwidth())
-			.attr('height', (d) => h - y(d.original))
+			.attr('height', animate ? 0 : (d) => h - y(d.original))
 			.attr('fill', '#e5e7eb')
-			.attr('rx', 4);
+			.attr('rx', 4)
+			.style('cursor', 'pointer')
+			.on('mouseenter', function(event: MouseEvent, d) {
+				d3.select(this).transition('hover').duration(150).attr('opacity', 0.8);
+				tooltip.html(`<strong>${d.label}</strong><br>Original: ${formatVal(d.label, d.original)}`)
+					.style('opacity', '1');
+				const rect = (this as SVGRectElement).getBoundingClientRect();
+				const wrapRect = wrapperEl.getBoundingClientRect();
+				tooltip.style('left', `${rect.left - wrapRect.left + rect.width / 2}px`)
+					.style('top', `${rect.top - wrapRect.top - 8}px`)
+					.style('transform', 'translate(-50%, -100%)');
+			})
+			.on('mouseleave', function() {
+				d3.select(this).transition('hover').duration(150).attr('opacity', 1);
+				tooltip.style('opacity', '0');
+			});
 
-		groups.append('rect')
+		if (animate) {
+			origBars.transition('grow')
+				.duration(600)
+				.delay(100)
+				.ease(d3.easeCubicOut)
+				.attr('y', (d) => y(d.original))
+				.attr('height', (d) => h - y(d.original));
+		}
+
+		// Reduced bars
+		const reducedBars = groups.append('rect')
 			.attr('x', x1('reduced')!)
-			.attr('y', (d) => y(d.reduced))
+			.attr('y', animate ? h : (d) => y(d.reduced))
 			.attr('width', x1.bandwidth())
-			.attr('height', (d) => h - y(d.reduced))
+			.attr('height', animate ? 0 : (d) => h - y(d.reduced))
 			.attr('fill', '#00c4c5')
-			.attr('rx', 4);
+			.attr('rx', 4)
+			.style('cursor', 'pointer')
+			.on('mouseenter', function(event: MouseEvent, d) {
+				d3.select(this).transition('hover').duration(150).attr('opacity', 0.8);
+				tooltip.html(`<strong>${d.label}</strong><br>With Part Pmts: ${formatVal(d.label, d.reduced)}`)
+					.style('opacity', '1');
+				const rect = (this as SVGRectElement).getBoundingClientRect();
+				const wrapRect = wrapperEl.getBoundingClientRect();
+				tooltip.style('left', `${rect.left - wrapRect.left + rect.width / 2}px`)
+					.style('top', `${rect.top - wrapRect.top - 8}px`)
+					.style('transform', 'translate(-50%, -100%)');
+			})
+			.on('mouseleave', function() {
+				d3.select(this).transition('hover').duration(150).attr('opacity', 1);
+				tooltip.style('opacity', '0');
+			});
 
-		const legend = g.append('g').attr('transform', `translate(${w - 140}, 0)`);
-		legend.append('rect').attr('width', 12).attr('height', 12).attr('rx', 2).attr('fill', '#e5e7eb');
-		legend.append('text').attr('x', 18).attr('y', 10).text('Original')
-			.style('font-size', '10px').style('font-family', 'var(--font)').attr('fill', '#6b7280');
+		if (animate) {
+			reducedBars.transition('grow')
+				.duration(600)
+				.delay(250)
+				.ease(d3.easeCubicOut)
+				.attr('y', (d) => y(d.reduced))
+				.attr('height', (d) => h - y(d.reduced));
+		}
 
-		legend.append('rect').attr('y', 18).attr('width', 12).attr('height', 12).attr('rx', 2).attr('fill', '#00c4c5');
-		legend.append('text').attr('x', 18).attr('y', 28).text('With Part Pmts')
-			.style('font-size', '10px').style('font-family', 'var(--font)').attr('fill', '#6b7280');
+		hasAnimated = true;
 	});
 </script>
 
 <ChartContainer title="Savings Comparison">
-	<div bind:this={wrapperEl}>
+	<div class="chart-wrapper" bind:this={wrapperEl}>
 		<svg bind:this={svgEl}></svg>
+		<div class="tooltip" bind:this={tooltipEl}></div>
+	</div>
+	<div class="legend">
+		<span class="legend-item">
+			<span class="legend-swatch original"></span>
+			Original
+		</span>
+		<span class="legend-item">
+			<span class="legend-swatch reduced"></span>
+			With Part Pmts
+		</span>
 	</div>
 </ChartContainer>
 
@@ -130,6 +209,56 @@
 {/if}
 
 <style>
+	.chart-wrapper {
+		position: relative;
+	}
+
+	.tooltip {
+		position: absolute;
+		background: rgba(17, 24, 39, 0.9);
+		color: white;
+		padding: 0.5rem 0.625rem;
+		border-radius: 6px;
+		font-size: 0.6875rem;
+		line-height: 1.4;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.15s;
+		white-space: nowrap;
+		z-index: 10;
+	}
+
+	.legend {
+		display: flex;
+		justify-content: center;
+		gap: 1.5rem;
+		padding-top: 0.75rem;
+	}
+
+	.legend-item {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-size: 0.6875rem;
+		color: #6b7280;
+		font-weight: 600;
+	}
+
+	.legend-swatch {
+		display: inline-block;
+		width: 12px;
+		height: 12px;
+		border-radius: 2px;
+	}
+
+	.legend-swatch.original {
+		background: #e5e7eb;
+	}
+
+	.legend-swatch.reduced {
+		background: #00c4c5;
+	}
+
 	.savings-summary {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
