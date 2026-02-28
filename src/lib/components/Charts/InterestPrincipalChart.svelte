@@ -99,11 +99,11 @@
 			.attr('opacity', 0)
 			.attr('d', areaInterest);
 
-		// Blue (principal) — rises full at opacity 1, shrinks to top, then fades to 0.7 as yellow appears
+		// Blue (principal) — rises full, shrinks to top, then yellow fills below
 		g.append('path')
 			.datum(stackData)
 			.attr('fill', '#00c4c5')
-			.attr('opacity', 1)
+			.attr('opacity', 0.7)
 			.attr('d', areaFullFlat)
 			.transition()
 			.duration(400)
@@ -114,10 +114,7 @@
 			.ease(d3.easeCubicOut)
 			.attr('d', areaPrincipal)
 			.on('end', () => {
-				// Only after blue is fully in place, reveal yellow and soften blue
 				yellowPath.transition().duration(300).ease(d3.easeCubicOut).attr('opacity', 0.7);
-				d3.select(svgEl).select('path[fill="#00c4c5"]')
-					.transition().duration(300).attr('opacity', 0.7);
 			});
 
 		// Hover crosshair + tooltip

@@ -109,7 +109,7 @@
 			.transition()
 			.duration(800)
 			.delay(100)
-			.ease(d3.easeBackOut.overshoot(0.3))
+			.ease(d3.easeCubicOut)
 			.attr('y', (d) => y(d.original))
 			.attr('height', (d) => h - y(d.original));
 
@@ -139,7 +139,7 @@
 			.transition()
 			.duration(800)
 			.delay(250)
-			.ease(d3.easeBackOut.overshoot(0.3))
+			.ease(d3.easeCubicOut)
 			.attr('y', (d) => y(d.reduced))
 			.attr('height', (d) => h - y(d.reduced));
 	});
