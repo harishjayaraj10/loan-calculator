@@ -18,12 +18,28 @@ export function generateAmortization(
 ): AmortizationRow[] {
 	const r = project.annualRate / 12 / 100;
 	const n = project.tenureYears * 12;
-	const emi = calculateEMI(project.principal, project.annualRate, project.tenureYears);
+	const calculatedEmi = calculateEMI(project.principal, project.annualRate, project.tenureYears);
+	const emi = project.emiOverride || calculatedEmi;
 	const rows: AmortizationRow[] = [];
 
 	let balance = project.principal;
 	let currentMonth = project.startMonth;
 	let currentYear = project.startYear;
+
+	// Insert pre-EMI interest row if provided
+	if (project.preEmiInterest && project.preEmiMonth && project.preEmiYear) {
+		rows.push({
+			monthIndex: -1,
+			month: project.preEmiMonth,
+			year: project.preEmiYear,
+			openingBalance: balance,
+			emi: project.preEmiInterest,
+			interest: project.preEmiInterest,
+			principal: 0,
+			partPayment: 0,
+			closingBalance: balance
+		});
+	}
 
 	// Part payments keyed by the month they are PAID (for display).
 	// But the balance reduction takes effect from the NEXT month.

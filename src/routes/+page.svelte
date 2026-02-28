@@ -12,19 +12,30 @@
 	let newTenure = $state('');
 	let newStartMonth = $state(new Date().getMonth() + 1);
 	let newStartYear = $state(new Date().getFullYear());
+	let newEmiOverride = $state('');
+	let newPreEmiInterest = $state('');
+	let newPreEmiMonth = $state(new Date().getMonth() + 1);
+	let newPreEmiYear = $state(new Date().getFullYear());
+	let showNewAdvanced = $state(false);
 	let deleteConfirm = $state<string | null>(null);
 
 	let projects = $derived(getProjects());
 
 	function handleCreate() {
 		if (!newName || !newPrincipal || !newRate || !newTenure) return;
+		const emiOverride = newEmiOverride ? Number(newEmiOverride) : undefined;
+		const preEmiInterest = newPreEmiInterest ? Number(newPreEmiInterest) : undefined;
 		const id = addProject({
 			name: newName,
 			principal: Number(newPrincipal),
 			annualRate: Number(newRate),
 			tenureYears: Number(newTenure),
 			startMonth: newStartMonth,
-			startYear: newStartYear
+			startYear: newStartYear,
+			emiOverride,
+			preEmiInterest,
+			preEmiMonth: preEmiInterest ? newPreEmiMonth : undefined,
+			preEmiYear: preEmiInterest ? newPreEmiYear : undefined
 		});
 		resetForm();
 		goto(`/project/${id}`);
@@ -38,6 +49,11 @@
 		newTenure = '';
 		newStartMonth = new Date().getMonth() + 1;
 		newStartYear = new Date().getFullYear();
+		newEmiOverride = '';
+		newPreEmiInterest = '';
+		newPreEmiMonth = new Date().getMonth() + 1;
+		newPreEmiYear = new Date().getFullYear();
+		showNewAdvanced = false;
 	}
 
 	function confirmDelete(id: string) {
@@ -120,6 +136,40 @@
 						<input id="startYear" type="number" bind:value={newStartYear} min="2000" max="2050" />
 					</div>
 				</div>
+
+				<button type="button" class="advanced-toggle" onclick={() => showNewAdvanced = !showNewAdvanced}>
+					{showNewAdvanced ? 'Hide' : 'Show'} Advanced Options
+				</button>
+
+				{#if showNewAdvanced}
+					<div class="form-grid" style="margin-top: 1rem;">
+						<div class="field full">
+							<label for="emiOverride">EMI Override</label>
+							<input id="emiOverride" type="number" bind:value={newEmiOverride} step="1" min="0" placeholder="Leave empty for calculated EMI" />
+							<span class="field-hint">Enter your bank's actual EMI if it differs from the calculated value</span>
+						</div>
+						<div class="field full">
+							<label for="preEmiInterest">Pre-EMI Interest</label>
+							<input id="preEmiInterest" type="number" bind:value={newPreEmiInterest} step="1" min="0" placeholder="Optional" />
+							<span class="field-hint">Partial-month interest before regular EMIs began</span>
+						</div>
+						{#if newPreEmiInterest}
+							<div class="field">
+								<label for="preEmiMonth">Pre-EMI Month</label>
+								<select id="preEmiMonth" bind:value={newPreEmiMonth}>
+									{#each months as m}
+										<option value={m.value}>{m.label}</option>
+									{/each}
+								</select>
+							</div>
+							<div class="field">
+								<label for="preEmiYear">Pre-EMI Year</label>
+								<input id="preEmiYear" type="number" bind:value={newPreEmiYear} min="2000" max="2050" />
+							</div>
+						{/if}
+					</div>
+				{/if}
+
 				<div class="form-actions">
 					<button type="button" class="btn btn-cancel" onclick={resetForm}>Cancel</button>
 					<button type="submit" class="btn btn-primary">Create Project</button>
@@ -212,6 +262,27 @@
 	.field select:focus {
 		outline: none;
 		border-color: var(--color-primary);
+	}
+
+	.advanced-toggle {
+		display: block;
+		margin-top: 1rem;
+		font-size: 0.75rem;
+		font-weight: 700;
+		color: var(--color-primary);
+		cursor: pointer;
+		background: none;
+		border: none;
+		padding: 0;
+	}
+
+	.advanced-toggle:hover {
+		text-decoration: underline;
+	}
+
+	.field-hint {
+		font-size: 0.6875rem;
+		color: var(--color-text-secondary);
 	}
 
 	.form-actions {

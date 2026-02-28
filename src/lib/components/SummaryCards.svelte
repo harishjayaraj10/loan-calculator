@@ -5,7 +5,8 @@
 
 	let { project }: { project: LoanProject } = $props();
 
-	let emi = $derived(calculateEMI(project.principal, project.annualRate, project.tenureYears));
+	let calculatedEmi = $derived(calculateEMI(project.principal, project.annualRate, project.tenureYears));
+	let emi = $derived(project.emiOverride || calculatedEmi);
 	let schedule = $derived(generateAmortization(project, true));
 	let totalInterest = $derived(schedule.reduce((s, r) => s + r.interest, 0));
 	let totalPayment = $derived(schedule.reduce((s, r) => s + r.emi + r.partPayment, 0));

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { LoanProject } from '$lib/types';
 	import { updateProject } from '$lib/stores/projects.svelte';
+	import { calculateEMI } from '$lib/utils/calculations';
 	import { untrack } from 'svelte';
 
 	let { project }: { project: LoanProject } = $props();
@@ -11,6 +12,13 @@
 	let tenureYears = $state(untrack(() => project.tenureYears));
 	let startMonth = $state(untrack(() => project.startMonth));
 	let startYear = $state(untrack(() => project.startYear));
+	let emiOverrideStr = $state(untrack(() => project.emiOverride?.toString() ?? ''));
+	let preEmiInterestStr = $state(untrack(() => project.preEmiInterest?.toString() ?? ''));
+	let preEmiMonth = $state(untrack(() => project.preEmiMonth ?? 1));
+	let preEmiYear = $state(untrack(() => project.preEmiYear ?? new Date().getFullYear()));
+	let showAdvanced = $state(false);
+
+	let calculatedEmi = $derived(calculateEMI(Number(principal) || 0, Number(annualRate) || 0, Number(tenureYears) || 1));
 
 	$effect(() => {
 		name = project.name;
@@ -19,16 +27,26 @@
 		tenureYears = project.tenureYears;
 		startMonth = project.startMonth;
 		startYear = project.startYear;
+		emiOverrideStr = project.emiOverride?.toString() ?? '';
+		preEmiInterestStr = project.preEmiInterest?.toString() ?? '';
+		preEmiMonth = project.preEmiMonth ?? 1;
+		preEmiYear = project.preEmiYear ?? new Date().getFullYear();
 	});
 
 	function save() {
+		const emiOverride = emiOverrideStr ? Number(emiOverrideStr) : undefined;
+		const preEmiInterest = preEmiInterestStr ? Number(preEmiInterestStr) : undefined;
 		updateProject(project.id, {
 			name,
 			principal: Number(principal),
 			annualRate: Number(annualRate),
 			tenureYears: Number(tenureYears),
 			startMonth: Number(startMonth),
-			startYear: Number(startYear)
+			startYear: Number(startYear),
+			emiOverride,
+			preEmiInterest,
+			preEmiMonth: preEmiInterest ? Number(preEmiMonth) : undefined,
+			preEmiYear: preEmiInterest ? Number(preEmiYear) : undefined
 		});
 	}
 
@@ -75,6 +93,40 @@
 				<input id="edit-start-year" type="number" bind:value={startYear} min="2000" max="2050" />
 			</div>
 		</div>
+
+		<button type="button" class="advanced-toggle" onclick={() => showAdvanced = !showAdvanced}>
+			{showAdvanced ? 'Hide' : 'Show'} Advanced Options
+		</button>
+
+		{#if showAdvanced}
+			<div class="form-grid" style="margin-top: 1rem;">
+				<div class="field full">
+					<label for="edit-emi-override">EMI Override</label>
+					<input id="edit-emi-override" type="number" bind:value={emiOverrideStr} step="1" min="0" placeholder="Calculated: {Math.round(calculatedEmi)}" />
+					<span class="field-hint">Leave empty to use calculated EMI</span>
+				</div>
+				<div class="field full">
+					<label for="edit-pre-emi">Pre-EMI Interest</label>
+					<input id="edit-pre-emi" type="number" bind:value={preEmiInterestStr} step="1" min="0" placeholder="Optional" />
+					<span class="field-hint">Partial-month interest before regular EMIs began</span>
+				</div>
+				{#if preEmiInterestStr}
+					<div class="field">
+						<label for="edit-pre-emi-month">Pre-EMI Month</label>
+						<select id="edit-pre-emi-month" bind:value={preEmiMonth}>
+							{#each months as m}
+								<option value={m.value}>{m.label}</option>
+							{/each}
+						</select>
+					</div>
+					<div class="field">
+						<label for="edit-pre-emi-year">Pre-EMI Year</label>
+						<input id="edit-pre-emi-year" type="number" bind:value={preEmiYear} min="2000" max="2050" />
+					</div>
+				{/if}
+			</div>
+		{/if}
+
 		<div class="form-actions">
 			<button type="submit" class="btn btn-primary">Save Changes</button>
 		</div>
@@ -135,6 +187,27 @@
 	.field select:focus {
 		outline: none;
 		border-color: var(--color-primary);
+	}
+
+	.advanced-toggle {
+		display: block;
+		margin-top: 1rem;
+		font-size: 0.75rem;
+		font-weight: 700;
+		color: var(--color-primary);
+		cursor: pointer;
+		background: none;
+		border: none;
+		padding: 0;
+	}
+
+	.advanced-toggle:hover {
+		text-decoration: underline;
+	}
+
+	.field-hint {
+		font-size: 0.6875rem;
+		color: var(--color-text-secondary);
 	}
 
 	.form-actions {

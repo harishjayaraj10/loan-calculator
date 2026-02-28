@@ -6,6 +6,10 @@ export interface LoanProject {
 	tenureYears: number;
 	startMonth: number;
 	startYear: number;
+	emiOverride?: number;
+	preEmiInterest?: number;
+	preEmiMonth?: number;
+	preEmiYear?: number;
 	partPayments: PartPayment[];
 	createdAt: number;
 }
@@ -41,6 +45,10 @@ export interface ExportProject {
 	tenureYears: number;
 	startMonth: number;
 	startYear: number;
+	emiOverride?: number;
+	preEmiInterest?: number;
+	preEmiMonth?: number;
+	preEmiYear?: number;
 	partPayments: { month: number; year: number; amount: number }[];
 }
 

@@ -42,6 +42,10 @@ export function addProject(data: {
 	tenureYears: number;
 	startMonth: number;
 	startYear: number;
+	emiOverride?: number;
+	preEmiInterest?: number;
+	preEmiMonth?: number;
+	preEmiYear?: number;
 }): string {
 	const id = generateId();
 	const project: LoanProject = {
@@ -120,6 +124,10 @@ export function exportProjects(projectIds?: string[]): ExportData {
 			tenureYears: p.tenureYears,
 			startMonth: p.startMonth,
 			startYear: p.startYear,
+			...(p.emiOverride && { emiOverride: p.emiOverride }),
+			...(p.preEmiInterest && { preEmiInterest: p.preEmiInterest }),
+			...(p.preEmiMonth && { preEmiMonth: p.preEmiMonth }),
+			...(p.preEmiYear && { preEmiYear: p.preEmiYear }),
 			partPayments: p.partPayments.map((pp) => ({
 				month: pp.month,
 				year: pp.year,
@@ -145,6 +153,10 @@ export function importProjects(data: ExportData): number {
 			tenureYears: p.tenureYears,
 			startMonth: p.startMonth,
 			startYear: p.startYear,
+			...(p.emiOverride && { emiOverride: p.emiOverride }),
+			...(p.preEmiInterest && { preEmiInterest: p.preEmiInterest }),
+			...(p.preEmiMonth && { preEmiMonth: p.preEmiMonth }),
+			...(p.preEmiYear && { preEmiYear: p.preEmiYear }),
 			partPayments: p.partPayments.map((pp) => ({
 				id: generateId(),
 				month: pp.month,

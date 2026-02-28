@@ -9,7 +9,8 @@
 		ondelete: () => void;
 	} = $props();
 
-	let emi = $derived(calculateEMI(project.principal, project.annualRate, project.tenureYears));
+	let calculatedEmi = $derived(calculateEMI(project.principal, project.annualRate, project.tenureYears));
+	let emi = $derived(project.emiOverride || calculatedEmi);
 	let totalMonths = $derived(project.tenureYears * 12);
 	let paidMonths = $derived(getPaidEMIs(project));
 	let progress = $derived(Math.min((paidMonths / totalMonths) * 100, 100));
