@@ -25,26 +25,41 @@ export function generateAmortization(
 	let currentMonth = project.startMonth;
 	let currentYear = project.startYear;
 
-	const ppMap = new Map<string, number>();
+	// Part payments keyed by the month they are PAID (for display).
+	// But the balance reduction takes effect from the NEXT month.
+	const ppDisplayMap = new Map<string, number>();
+	const ppEffectMap = new Map<string, number>();
 	if (includePartPayments) {
 		for (const pp of project.partPayments) {
-			const key = `${pp.year}-${pp.month}`;
-			ppMap.set(key, (ppMap.get(key) || 0) + pp.amount);
+			const displayKey = `${pp.year}-${pp.month}`;
+			ppDisplayMap.set(displayKey, (ppDisplayMap.get(displayKey) || 0) + pp.amount);
+			const effective = addMonth(pp.month, pp.year);
+			const effectKey = `${effective.year}-${effective.month}`;
+			ppEffectMap.set(effectKey, (ppEffectMap.get(effectKey) || 0) + pp.amount);
 		}
 	}
 
 	for (let i = 0; i < n * 2 && balance > 0.01; i++) {
+		// Apply part payment effect (paid previous month, reduces balance this month)
+		const effectKey = `${currentYear}-${currentMonth}`;
+		const ppEffect = Math.min(ppEffectMap.get(effectKey) || 0, balance);
+		balance -= ppEffect;
+		if (balance < 0.01) balance = 0;
+		if (balance === 0) break;
+
 		const interest = balance * r;
 		let principalPortion = emi - interest;
-		const ppKey = `${currentYear}-${currentMonth}`;
-		const partPayment = ppMap.get(ppKey) || 0;
 
 		if (principalPortion > balance) {
 			principalPortion = balance;
 		}
 
-		let closingBalance = balance - principalPortion - partPayment;
+		let closingBalance = balance - principalPortion;
 		if (closingBalance < 0.01) closingBalance = 0;
+
+		// Display the part payment on the month it was paid
+		const displayKey = `${currentYear}-${currentMonth}`;
+		const ppDisplay = ppDisplayMap.get(displayKey) || 0;
 
 		rows.push({
 			monthIndex: i,
@@ -54,7 +69,7 @@ export function generateAmortization(
 			emi: principalPortion + interest > balance + interest ? balance + interest : emi,
 			interest,
 			principal: principalPortion,
-			partPayment: Math.min(partPayment, balance - principalPortion),
+			partPayment: ppDisplay,
 			closingBalance
 		});
 
