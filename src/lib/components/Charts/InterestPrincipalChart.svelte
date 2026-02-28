@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { LoanProject } from '$lib/types';
 	import { generateAmortization } from '$lib/utils/calculations';
-	import { formatMonthYear } from '$lib/utils/formatters';
+	import { formatCurrency, formatMonthYear } from '$lib/utils/formatters';
 	import ChartContainer from './ChartContainer.svelte';
 	import * as d3 from 'd3';
 	import { onMount } from 'svelte';
@@ -12,6 +12,7 @@
 
 	let svgEl: SVGSVGElement;
 	let wrapperEl: HTMLDivElement;
+	let tooltipEl: HTMLDivElement;
 	let chartWidth = $state(0);
 	const chartHeight = 300;
 
@@ -38,13 +39,25 @@
 		sel.selectAll('*').remove();
 		sel.attr('width', width).attr('height', height);
 
-		const g = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+		// Clip path for reveal animation
+		const clipId = 'clip-ip-' + Math.random().toString(36).slice(2);
+		sel.append('defs').append('clipPath').attr('id', clipId)
+			.append('rect').attr('height', h + margin.top + margin.bottom).attr('width', 0)
+			.transition().duration(1200).ease(d3.easeQuadOut)
+			.attr('width', width);
+
+		const g = sel.append('g')
+			.attr('transform', `translate(${margin.left},${margin.top})`)
+			.attr('clip-path', `url(#${clipId})`);
 
 		const x = d3.scaleLinear().domain([0, schedule.length - 1]).range([0, w]);
 		const yMax = d3.max(schedule, (d) => d.interest + d.principal) || 0;
 		const y = d3.scaleLinear().domain([0, yMax]).nice().range([h, 0]);
 
-		g.append('g')
+		// Axes (outside clip so they don't animate)
+		const axes = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+		axes.append('g')
 			.attr('transform', `translate(0,${h})`)
 			.call(d3.axisBottom(x).ticks(Math.min(schedule.length, 10)).tickFormat((d) => {
 				const idx = d as number;
@@ -59,7 +72,7 @@
 			.attr('transform', 'rotate(-30)')
 			.style('text-anchor', 'end');
 
-		g.append('g')
+		axes.append('g')
 			.call(d3.axisLeft(y).ticks(5).tickFormat((d) => {
 				const val = d as number;
 				if (val >= 100000) return `${(val / 100000).toFixed(1)}L`;
@@ -100,12 +113,50 @@
 			.attr('opacity', 0.7)
 			.attr('d', areaPrincipal);
 
+		// Hover crosshair + tooltip
+		const crosshair = axes.append('line')
+			.attr('y1', 0).attr('y2', h)
+			.attr('stroke', '#9ca3af')
+			.attr('stroke-width', 1)
+			.attr('stroke-dasharray', '3,3')
+			.style('opacity', 0)
+			.style('pointer-events', 'none');
+
+		const tooltip = d3.select(tooltipEl);
+
+		axes.append('rect')
+			.attr('width', w).attr('height', h)
+			.attr('fill', 'transparent')
+			.on('mousemove', (event: MouseEvent) => {
+				const [mx] = d3.pointer(event);
+				const idx = Math.round(x.invert(mx));
+				if (idx < 0 || idx >= schedule.length) return;
+
+				const cx = x(idx);
+				crosshair.attr('x1', cx).attr('x2', cx).style('opacity', 1);
+
+				const row = schedule[idx];
+				const dateStr = formatMonthYear(row.month, row.year);
+				const html = `<strong>${dateStr}</strong><br>Interest: ${formatCurrency(row.interest)}<br>Principal: ${formatCurrency(row.principal)}`;
+
+				tooltip.html(html).style('opacity', '1');
+
+				const tx = margin.left + cx;
+				const tooltipW = tooltipEl.offsetWidth;
+				const left = tx + tooltipW + 12 > width ? tx - tooltipW - 8 : tx + 12;
+				tooltip.style('left', `${left}px`).style('top', `${margin.top}px`);
+			})
+			.on('mouseleave', () => {
+				crosshair.style('opacity', 0);
+				tooltip.style('opacity', '0');
+			});
 	});
 </script>
 
 <ChartContainer title="Interest vs Principal Breakdown">
-	<div bind:this={wrapperEl}>
+	<div class="chart-wrapper" bind:this={wrapperEl}>
 		<svg bind:this={svgEl}></svg>
+		<div class="tooltip" bind:this={tooltipEl}></div>
 	</div>
 	<div class="legend">
 		<span class="legend-item">
@@ -120,6 +171,25 @@
 </ChartContainer>
 
 <style>
+	.chart-wrapper {
+		position: relative;
+	}
+
+	.tooltip {
+		position: absolute;
+		background: rgba(17, 24, 39, 0.9);
+		color: white;
+		padding: 0.5rem 0.625rem;
+		border-radius: 6px;
+		font-size: 0.6875rem;
+		line-height: 1.4;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.15s;
+		white-space: nowrap;
+		z-index: 10;
+	}
+
 	.legend {
 		display: flex;
 		justify-content: center;

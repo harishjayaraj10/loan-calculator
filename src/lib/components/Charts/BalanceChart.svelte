@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { LoanProject } from '$lib/types';
 	import { generateAmortization } from '$lib/utils/calculations';
-	import { formatMonthYear } from '$lib/utils/formatters';
+	import { formatCurrency, formatMonthYear } from '$lib/utils/formatters';
 	import ChartContainer from './ChartContainer.svelte';
 	import * as d3 from 'd3';
 	import { onMount } from 'svelte';
@@ -13,6 +13,7 @@
 
 	let svgEl: SVGSVGElement;
 	let wrapperEl: HTMLDivElement;
+	let tooltipEl: HTMLDivElement;
 	let chartWidth = $state(0);
 	const chartHeight = 300;
 
@@ -87,7 +88,8 @@
 			.y((d) => y(d.openingBalance))
 			.curve(d3.curveMonotoneX);
 
-		g.append('path')
+		// Draw lines with animation
+		const pathWithout = g.append('path')
 			.datum(withoutPP)
 			.attr('fill', 'none')
 			.attr('stroke', '#e5e7eb')
@@ -95,19 +97,104 @@
 			.attr('stroke-dasharray', '6,3')
 			.attr('d', lineWithout);
 
-		g.append('path')
+		const pathWith = g.append('path')
 			.datum(withPP)
 			.attr('fill', 'none')
 			.attr('stroke', '#00c4c5')
 			.attr('stroke-width', 2.5)
 			.attr('d', lineWith);
 
+		// Animate line drawing
+		[pathWithout, pathWith].forEach((path) => {
+			const length = (path.node() as SVGPathElement).getTotalLength();
+			path
+				.attr('stroke-dasharray', `${length} ${length}`)
+				.attr('stroke-dashoffset', length)
+				.transition()
+				.duration(1200)
+				.ease(d3.easeQuadOut)
+				.attr('stroke-dashoffset', 0)
+				.on('end', function() {
+					// Restore original dasharray for the dashed line
+					if (path === pathWithout) {
+						d3.select(this).attr('stroke-dasharray', '6,3');
+					} else {
+						d3.select(this).attr('stroke-dasharray', null);
+					}
+				});
+		});
+
+		// Hover crosshair + dots + tooltip
+		const crosshair = g.append('line')
+			.attr('y1', 0).attr('y2', h)
+			.attr('stroke', '#9ca3af')
+			.attr('stroke-width', 1)
+			.attr('stroke-dasharray', '3,3')
+			.style('opacity', 0)
+			.style('pointer-events', 'none');
+
+		const dotWithout = g.append('circle')
+			.attr('r', 4).attr('fill', '#e5e7eb').attr('stroke', '#fff').attr('stroke-width', 2)
+			.style('opacity', 0).style('pointer-events', 'none');
+
+		const dotWith = g.append('circle')
+			.attr('r', 4).attr('fill', '#00c4c5').attr('stroke', '#fff').attr('stroke-width', 2)
+			.style('opacity', 0).style('pointer-events', 'none');
+
+		const tooltip = d3.select(tooltipEl);
+
+		g.append('rect')
+			.attr('width', w).attr('height', h)
+			.attr('fill', 'transparent')
+			.on('mousemove', (event: MouseEvent) => {
+				const [mx] = d3.pointer(event);
+				const idx = Math.round(x.invert(mx));
+
+				if (idx < 0 || idx >= xMax) return;
+
+				const cx = x(idx);
+				crosshair.attr('x1', cx).attr('x2', cx).style('opacity', 1);
+
+				if (idx < withoutPP.length) {
+					dotWithout.attr('cx', cx).attr('cy', y(withoutPP[idx].openingBalance)).style('opacity', 1);
+				} else {
+					dotWithout.style('opacity', 0);
+				}
+
+				if (idx < withPP.length) {
+					dotWith.attr('cx', cx).attr('cy', y(withPP[idx].openingBalance)).style('opacity', 1);
+				} else {
+					dotWith.style('opacity', 0);
+				}
+
+				const row = idx < withPP.length ? withPP[idx] : withoutPP[idx];
+				const dateStr = formatMonthYear(row.month, row.year);
+				let html = `<strong>${dateStr}</strong>`;
+				if (idx < withoutPP.length) html += `<br>Original: ${formatCurrency(withoutPP[idx].openingBalance)}`;
+				if (idx < withPP.length) html += `<br>With PP: ${formatCurrency(withPP[idx].openingBalance)}`;
+
+				tooltip.html(html).style('opacity', '1');
+
+				const rect = wrapperEl.getBoundingClientRect();
+				const tx = margin.left + cx;
+				const tooltipNode = tooltipEl;
+				const tooltipW = tooltipNode.offsetWidth;
+				const left = tx + tooltipW + 12 > width ? tx - tooltipW - 8 : tx + 12;
+				tooltip.style('left', `${left}px`).style('top', `${margin.top}px`);
+			})
+			.on('mouseleave', () => {
+				crosshair.style('opacity', 0);
+				dotWithout.style('opacity', 0);
+				dotWith.style('opacity', 0);
+				tooltip.style('opacity', '0');
+			});
 	});
 </script>
 
 <ChartContainer title="Balance Over Time">
-	<div bind:this={wrapperEl}>
+	<div class="chart-wrapper" bind:this={wrapperEl}>
 		<svg bind:this={svgEl}></svg>
+		<div class="tooltip" bind:this={tooltipEl}></div>
 	</div>
 	<div class="legend">
 		<span class="legend-item">
@@ -122,6 +209,25 @@
 </ChartContainer>
 
 <style>
+	.chart-wrapper {
+		position: relative;
+	}
+
+	.tooltip {
+		position: absolute;
+		background: rgba(17, 24, 39, 0.9);
+		color: white;
+		padding: 0.5rem 0.625rem;
+		border-radius: 6px;
+		font-size: 0.6875rem;
+		line-height: 1.4;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.15s;
+		white-space: nowrap;
+		z-index: 10;
+	}
+
 	.legend {
 		display: flex;
 		justify-content: center;

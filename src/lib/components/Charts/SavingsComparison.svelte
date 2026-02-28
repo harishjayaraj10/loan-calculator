@@ -12,6 +12,7 @@
 
 	let svgEl: SVGSVGElement;
 	let wrapperEl: HTMLDivElement;
+	let tooltipEl: HTMLDivElement;
 	let chartWidth = $state(0);
 	const chartHeight = 300;
 
@@ -24,6 +25,11 @@
 		observer.observe(wrapperEl);
 		return () => observer.disconnect();
 	});
+
+	function formatVal(label: string, val: number): string {
+		if (label.includes('Interest')) return formatCurrency(val);
+		return String(val);
+	}
 
 	$effect(() => {
 		if (!svgEl || chartWidth <= 0 || !savings) return;
@@ -70,33 +76,79 @@
 			.style('font-size', '10px')
 			.style('font-family', 'var(--font)');
 
+		const tooltip = d3.select(tooltipEl);
+
 		const groups = g.selectAll('.group')
 			.data(data)
 			.join('g')
 			.attr('transform', (d) => `translate(${x0(d.label)},0)`);
 
+		// Original bars — animate from bottom
 		groups.append('rect')
 			.attr('x', x1('original')!)
-			.attr('y', (d) => y(d.original))
+			.attr('y', h)
 			.attr('width', x1.bandwidth())
-			.attr('height', (d) => h - y(d.original))
+			.attr('height', 0)
 			.attr('fill', '#e5e7eb')
-			.attr('rx', 4);
+			.attr('rx', 4)
+			.style('cursor', 'pointer')
+			.on('mouseenter', function(event: MouseEvent, d) {
+				d3.select(this).transition().duration(150).attr('opacity', 0.8);
+				tooltip.html(`<strong>${d.label}</strong><br>Original: ${formatVal(d.label, d.original)}`)
+					.style('opacity', '1');
+				const rect = (this as SVGRectElement).getBoundingClientRect();
+				const wrapRect = wrapperEl.getBoundingClientRect();
+				tooltip.style('left', `${rect.left - wrapRect.left + rect.width / 2}px`)
+					.style('top', `${rect.top - wrapRect.top - 8}px`)
+					.style('transform', 'translate(-50%, -100%)');
+			})
+			.on('mouseleave', function() {
+				d3.select(this).transition().duration(150).attr('opacity', 1);
+				tooltip.style('opacity', '0');
+			})
+			.transition()
+			.duration(800)
+			.delay(100)
+			.ease(d3.easeBackOut.overshoot(0.3))
+			.attr('y', (d) => y(d.original))
+			.attr('height', (d) => h - y(d.original));
 
+		// Reduced bars — animate from bottom with stagger
 		groups.append('rect')
 			.attr('x', x1('reduced')!)
-			.attr('y', (d) => y(d.reduced))
+			.attr('y', h)
 			.attr('width', x1.bandwidth())
-			.attr('height', (d) => h - y(d.reduced))
+			.attr('height', 0)
 			.attr('fill', '#00c4c5')
-			.attr('rx', 4);
-
+			.attr('rx', 4)
+			.style('cursor', 'pointer')
+			.on('mouseenter', function(event: MouseEvent, d) {
+				d3.select(this).transition().duration(150).attr('opacity', 0.8);
+				tooltip.html(`<strong>${d.label}</strong><br>With Part Pmts: ${formatVal(d.label, d.reduced)}`)
+					.style('opacity', '1');
+				const rect = (this as SVGRectElement).getBoundingClientRect();
+				const wrapRect = wrapperEl.getBoundingClientRect();
+				tooltip.style('left', `${rect.left - wrapRect.left + rect.width / 2}px`)
+					.style('top', `${rect.top - wrapRect.top - 8}px`)
+					.style('transform', 'translate(-50%, -100%)');
+			})
+			.on('mouseleave', function() {
+				d3.select(this).transition().duration(150).attr('opacity', 1);
+				tooltip.style('opacity', '0');
+			})
+			.transition()
+			.duration(800)
+			.delay(250)
+			.ease(d3.easeBackOut.overshoot(0.3))
+			.attr('y', (d) => y(d.reduced))
+			.attr('height', (d) => h - y(d.reduced));
 	});
 </script>
 
 <ChartContainer title="Savings Comparison">
-	<div bind:this={wrapperEl}>
+	<div class="chart-wrapper" bind:this={wrapperEl}>
 		<svg bind:this={svgEl}></svg>
+		<div class="tooltip" bind:this={tooltipEl}></div>
 	</div>
 	<div class="legend">
 		<span class="legend-item">
@@ -132,6 +184,25 @@
 {/if}
 
 <style>
+	.chart-wrapper {
+		position: relative;
+	}
+
+	.tooltip {
+		position: absolute;
+		background: rgba(17, 24, 39, 0.9);
+		color: white;
+		padding: 0.5rem 0.625rem;
+		border-radius: 6px;
+		font-size: 0.6875rem;
+		line-height: 1.4;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.15s;
+		white-space: nowrap;
+		z-index: 10;
+	}
+
 	.legend {
 		display: flex;
 		justify-content: center;
