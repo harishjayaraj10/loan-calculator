@@ -39,25 +39,13 @@
 		sel.selectAll('*').remove();
 		sel.attr('width', width).attr('height', height);
 
-		// Clip path for reveal animation
-		const clipId = 'clip-ip-' + Math.random().toString(36).slice(2);
-		sel.append('defs').append('clipPath').attr('id', clipId)
-			.append('rect').attr('height', h + margin.top + margin.bottom).attr('width', 0)
-			.transition().duration(1200).ease(d3.easeQuadOut)
-			.attr('width', width);
-
-		const g = sel.append('g')
-			.attr('transform', `translate(${margin.left},${margin.top})`)
-			.attr('clip-path', `url(#${clipId})`);
+		const g = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
 		const x = d3.scaleLinear().domain([0, schedule.length - 1]).range([0, w]);
 		const yMax = d3.max(schedule, (d) => d.interest + d.principal) || 0;
 		const y = d3.scaleLinear().domain([0, yMax]).nice().range([h, 0]);
 
-		// Axes (outside clip so they don't animate)
-		const axes = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
-
-		axes.append('g')
+		g.append('g')
 			.attr('transform', `translate(0,${h})`)
 			.call(d3.axisBottom(x).ticks(Math.min(schedule.length, 10)).tickFormat((d) => {
 				const idx = d as number;
@@ -72,7 +60,7 @@
 			.attr('transform', 'rotate(-30)')
 			.style('text-anchor', 'end');
 
-		axes.append('g')
+		g.append('g')
 			.call(d3.axisLeft(y).ticks(5).tickFormat((d) => {
 				const val = d as number;
 				if (val >= 100000) return `${(val / 100000).toFixed(1)}L`;
@@ -89,32 +77,50 @@
 			principal: d.principal
 		}));
 
-		const areaInterest = d3.area<(typeof stackData)[0]>()
-			.x((d) => x(d.idx))
-			.y0(h)
-			.y1((d) => y(d.interest))
-			.curve(d3.curveMonotoneX);
+		const curve = d3.curveMonotoneX;
+
+		// Blue starts covering the full area (baseline to top), then shrinks to just the principal sliver
+		const areaFullFlat = d3.area<(typeof stackData)[0]>()
+			.x((d) => x(d.idx)).y0(h).y1(h).curve(curve);
+
+		const areaFull = d3.area<(typeof stackData)[0]>()
+			.x((d) => x(d.idx)).y0(h).y1((d) => y(d.interest + d.principal)).curve(curve);
 
 		const areaPrincipal = d3.area<(typeof stackData)[0]>()
-			.x((d) => x(d.idx))
-			.y0((d) => y(d.interest))
-			.y1((d) => y(d.interest + d.principal))
-			.curve(d3.curveMonotoneX);
+			.x((d) => x(d.idx)).y0((d) => y(d.interest)).y1((d) => y(d.interest + d.principal)).curve(curve);
 
+		const areaInterest = d3.area<(typeof stackData)[0]>()
+			.x((d) => x(d.idx)).y0(h).y1((d) => y(d.interest)).curve(curve);
+
+		// Yellow (interest) — appears only after blue has fully shrunk
 		g.append('path')
 			.datum(stackData)
 			.attr('fill', '#fbbf24')
-			.attr('opacity', 0.7)
-			.attr('d', areaInterest);
+			.attr('opacity', 0)
+			.attr('d', areaInterest)
+			.transition()
+			.delay(650)
+			.duration(250)
+			.ease(d3.easeCubicOut)
+			.attr('opacity', 0.7);
 
+		// Blue (principal) — rises full, shrinks to top, then yellow fills below
 		g.append('path')
 			.datum(stackData)
 			.attr('fill', '#00c4c5')
 			.attr('opacity', 0.7)
+			.attr('d', areaFullFlat)
+			.transition()
+			.duration(400)
+			.ease(d3.easeCubicOut)
+			.attr('d', areaFull)
+			.transition()
+			.duration(250)
+			.ease(d3.easeCubicOut)
 			.attr('d', areaPrincipal);
 
 		// Hover crosshair + tooltip
-		const crosshair = axes.append('line')
+		const crosshair = g.append('line')
 			.attr('y1', 0).attr('y2', h)
 			.attr('stroke', '#9ca3af')
 			.attr('stroke-width', 1)
@@ -124,7 +130,7 @@
 
 		const tooltip = d3.select(tooltipEl);
 
-		axes.append('rect')
+		g.append('rect')
 			.attr('width', w).attr('height', h)
 			.attr('fill', 'transparent')
 			.on('mousemove', (event: MouseEvent) => {
