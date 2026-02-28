@@ -16,18 +16,33 @@
 	let chartWidth = $state(0);
 	const chartHeight = 300;
 
+	let hasAnimated = false;
+	let isVisible = $state(false);
+
 	onMount(() => {
-		const observer = new ResizeObserver((entries) => {
+		const resizeObs = new ResizeObserver((entries) => {
 			for (const entry of entries) {
 				chartWidth = entry.contentRect.width;
 			}
 		});
-		observer.observe(wrapperEl);
-		return () => observer.disconnect();
+		resizeObs.observe(wrapperEl);
+
+		const intersectObs = new IntersectionObserver((entries) => {
+			if (entries[0].isIntersecting) {
+				isVisible = true;
+				intersectObs.disconnect();
+			}
+		}, { threshold: 0.2 });
+		intersectObs.observe(wrapperEl);
+
+		return () => {
+			resizeObs.disconnect();
+			intersectObs.disconnect();
+		};
 	});
 
 	$effect(() => {
-		if (!svgEl || chartWidth <= 0 || !schedule.length) return;
+		if (!svgEl || chartWidth <= 0 || !schedule.length || !isVisible) return;
 		const width = chartWidth;
 		const height = chartHeight;
 
@@ -92,30 +107,40 @@
 		const areaInterest = d3.area<(typeof stackData)[0]>()
 			.x((d) => x(d.idx)).y0(h).y1((d) => y(d.interest)).curve(curve);
 
-		// Yellow (interest) — appears only after blue has fully shrunk
+		// Yellow (interest)
 		const yellowPath = g.append('path')
 			.datum(stackData)
 			.attr('fill', '#fbbf24')
-			.attr('opacity', 0)
+			.attr('opacity', hasAnimated ? 0.7 : 0)
 			.attr('d', areaInterest);
 
-		// Blue (principal) — rises full, shrinks to top, then yellow fills below
-		g.append('path')
-			.datum(stackData)
-			.attr('fill', '#00c4c5')
-			.attr('opacity', 0.7)
-			.attr('d', areaFullFlat)
-			.transition()
-			.duration(400)
-			.ease(d3.easeCubicOut)
-			.attr('d', areaFull)
-			.transition()
-			.duration(300)
-			.ease(d3.easeCubicOut)
-			.attr('d', areaPrincipal)
-			.on('end', () => {
-				yellowPath.transition().duration(300).ease(d3.easeCubicOut).attr('opacity', 0.7);
-			});
+		if (hasAnimated) {
+			// No animation on re-renders — draw final state directly
+			g.append('path')
+				.datum(stackData)
+				.attr('fill', '#00c4c5')
+				.attr('opacity', 0.7)
+				.attr('d', areaPrincipal);
+		} else {
+			// Blue (principal) — rises full, shrinks to top, then yellow fills below
+			g.append('path')
+				.datum(stackData)
+				.attr('fill', '#00c4c5')
+				.attr('opacity', 0.7)
+				.attr('d', areaFullFlat)
+				.transition()
+				.duration(400)
+				.ease(d3.easeCubicOut)
+				.attr('d', areaFull)
+				.transition()
+				.duration(300)
+				.ease(d3.easeCubicOut)
+				.attr('d', areaPrincipal)
+				.on('end', () => {
+					yellowPath.transition().duration(300).ease(d3.easeCubicOut).attr('opacity', 0.7);
+				});
+			hasAnimated = true;
+		}
 
 		// Hover crosshair + tooltip
 		const crosshair = g.append('line')

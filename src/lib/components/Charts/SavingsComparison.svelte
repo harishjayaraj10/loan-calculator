@@ -16,14 +16,29 @@
 	let chartWidth = $state(0);
 	const chartHeight = 300;
 
+	let hasAnimated = false;
+	let isVisible = $state(false);
+
 	onMount(() => {
-		const observer = new ResizeObserver((entries) => {
+		const resizeObs = new ResizeObserver((entries) => {
 			for (const entry of entries) {
 				chartWidth = entry.contentRect.width;
 			}
 		});
-		observer.observe(wrapperEl);
-		return () => observer.disconnect();
+		resizeObs.observe(wrapperEl);
+
+		const intersectObs = new IntersectionObserver((entries) => {
+			if (entries[0].isIntersecting) {
+				isVisible = true;
+				intersectObs.disconnect();
+			}
+		}, { threshold: 0.2 });
+		intersectObs.observe(wrapperEl);
+
+		return () => {
+			resizeObs.disconnect();
+			intersectObs.disconnect();
+		};
 	});
 
 	function formatVal(label: string, val: number): string {
@@ -32,7 +47,7 @@
 	}
 
 	$effect(() => {
-		if (!svgEl || chartWidth <= 0 || !savings) return;
+		if (!svgEl || chartWidth <= 0 || !savings || !isVisible) return;
 		const width = chartWidth;
 		const height = chartHeight;
 
@@ -83,17 +98,19 @@
 			.join('g')
 			.attr('transform', (d) => `translate(${x0(d.label)},0)`);
 
-		// Original bars — animate from bottom
-		groups.append('rect')
+		const animate = !hasAnimated;
+
+		// Original bars
+		const origBars = groups.append('rect')
 			.attr('x', x1('original')!)
-			.attr('y', h)
+			.attr('y', animate ? h : (d) => y(d.original))
 			.attr('width', x1.bandwidth())
-			.attr('height', 0)
+			.attr('height', animate ? 0 : (d) => h - y(d.original))
 			.attr('fill', '#e5e7eb')
 			.attr('rx', 4)
 			.style('cursor', 'pointer')
 			.on('mouseenter', function(event: MouseEvent, d) {
-				d3.select(this).transition().duration(150).attr('opacity', 0.8);
+				d3.select(this).transition('hover').duration(150).attr('opacity', 0.8);
 				tooltip.html(`<strong>${d.label}</strong><br>Original: ${formatVal(d.label, d.original)}`)
 					.style('opacity', '1');
 				const rect = (this as SVGRectElement).getBoundingClientRect();
@@ -103,27 +120,30 @@
 					.style('transform', 'translate(-50%, -100%)');
 			})
 			.on('mouseleave', function() {
-				d3.select(this).transition().duration(150).attr('opacity', 1);
+				d3.select(this).transition('hover').duration(150).attr('opacity', 1);
 				tooltip.style('opacity', '0');
-			})
-			.transition()
-			.duration(800)
-			.delay(100)
-			.ease(d3.easeCubicOut)
-			.attr('y', (d) => y(d.original))
-			.attr('height', (d) => h - y(d.original));
+			});
 
-		// Reduced bars — animate from bottom with stagger
-		groups.append('rect')
+		if (animate) {
+			origBars.transition('grow')
+				.duration(600)
+				.delay(100)
+				.ease(d3.easeCubicOut)
+				.attr('y', (d) => y(d.original))
+				.attr('height', (d) => h - y(d.original));
+		}
+
+		// Reduced bars
+		const reducedBars = groups.append('rect')
 			.attr('x', x1('reduced')!)
-			.attr('y', h)
+			.attr('y', animate ? h : (d) => y(d.reduced))
 			.attr('width', x1.bandwidth())
-			.attr('height', 0)
+			.attr('height', animate ? 0 : (d) => h - y(d.reduced))
 			.attr('fill', '#00c4c5')
 			.attr('rx', 4)
 			.style('cursor', 'pointer')
 			.on('mouseenter', function(event: MouseEvent, d) {
-				d3.select(this).transition().duration(150).attr('opacity', 0.8);
+				d3.select(this).transition('hover').duration(150).attr('opacity', 0.8);
 				tooltip.html(`<strong>${d.label}</strong><br>With Part Pmts: ${formatVal(d.label, d.reduced)}`)
 					.style('opacity', '1');
 				const rect = (this as SVGRectElement).getBoundingClientRect();
@@ -133,15 +153,20 @@
 					.style('transform', 'translate(-50%, -100%)');
 			})
 			.on('mouseleave', function() {
-				d3.select(this).transition().duration(150).attr('opacity', 1);
+				d3.select(this).transition('hover').duration(150).attr('opacity', 1);
 				tooltip.style('opacity', '0');
-			})
-			.transition()
-			.duration(800)
-			.delay(250)
-			.ease(d3.easeCubicOut)
-			.attr('y', (d) => y(d.reduced))
-			.attr('height', (d) => h - y(d.reduced));
+			});
+
+		if (animate) {
+			reducedBars.transition('grow')
+				.duration(600)
+				.delay(250)
+				.ease(d3.easeCubicOut)
+				.attr('y', (d) => y(d.reduced))
+				.attr('height', (d) => h - y(d.reduced));
+		}
+
+		hasAnimated = true;
 	});
 </script>
 

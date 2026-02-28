@@ -17,18 +17,33 @@
 	let chartWidth = $state(0);
 	const chartHeight = 300;
 
+	let hasAnimated = false;
+	let isVisible = $state(false);
+
 	onMount(() => {
-		const observer = new ResizeObserver((entries) => {
+		const resizeObs = new ResizeObserver((entries) => {
 			for (const entry of entries) {
 				chartWidth = entry.contentRect.width;
 			}
 		});
-		observer.observe(wrapperEl);
-		return () => observer.disconnect();
+		resizeObs.observe(wrapperEl);
+
+		const intersectObs = new IntersectionObserver((entries) => {
+			if (entries[0].isIntersecting) {
+				isVisible = true;
+				intersectObs.disconnect();
+			}
+		}, { threshold: 0.2 });
+		intersectObs.observe(wrapperEl);
+
+		return () => {
+			resizeObs.disconnect();
+			intersectObs.disconnect();
+		};
 	});
 
 	$effect(() => {
-		if (!svgEl || chartWidth <= 0 || !withPP.length || !withoutPP.length) return;
+		if (!svgEl || chartWidth <= 0 || !withPP.length || !withoutPP.length || !isVisible) return;
 		const width = chartWidth;
 		const height = chartHeight;
 
@@ -104,25 +119,27 @@
 			.attr('stroke-width', 2.5)
 			.attr('d', lineWith);
 
-		// Animate line drawing
-		[pathWithout, pathWith].forEach((path) => {
-			const length = (path.node() as SVGPathElement).getTotalLength();
-			path
-				.attr('stroke-dasharray', `${length} ${length}`)
-				.attr('stroke-dashoffset', length)
-				.transition()
-				.duration(1200)
-				.ease(d3.easeQuadOut)
-				.attr('stroke-dashoffset', 0)
-				.on('end', function() {
-					// Restore original dasharray for the dashed line
-					if (path === pathWithout) {
-						d3.select(this).attr('stroke-dasharray', '6,3');
-					} else {
-						d3.select(this).attr('stroke-dasharray', null);
-					}
-				});
-		});
+		// Animate line drawing (only on first render)
+		if (!hasAnimated) {
+			[pathWithout, pathWith].forEach((path) => {
+				const length = (path.node() as SVGPathElement).getTotalLength();
+				path
+					.attr('stroke-dasharray', `${length} ${length}`)
+					.attr('stroke-dashoffset', length)
+					.transition()
+					.duration(1200)
+					.ease(d3.easeQuadOut)
+					.attr('stroke-dashoffset', 0)
+					.on('end', function() {
+						if (path === pathWithout) {
+							d3.select(this).attr('stroke-dasharray', '6,3');
+						} else {
+							d3.select(this).attr('stroke-dasharray', null);
+						}
+					});
+			});
+			hasAnimated = true;
+		}
 
 		// Hover crosshair + dots + tooltip
 		const crosshair = g.append('line')
