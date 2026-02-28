@@ -72,7 +72,7 @@
 </Header>
 
 <main>
-	{#if projects.length === 0 && !showNewForm}
+	{#if projects.length === 0}
 		<div class="empty-state">
 			<p class="empty-text">No loan projects yet</p>
 			<p class="empty-sub">Create your first project to get started</p>
@@ -93,9 +93,22 @@
 		<div class="toast">Click delete again to confirm</div>
 	{/if}
 
-	{#if showNewForm}
-		<div class="new-form-card">
-			<h2 class="form-title">New Project</h2>
+	<button class="fab" onclick={() => (showNewForm = true)}>+</button>
+</main>
+
+{#if showNewForm}
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div class="modal-backdrop" onclick={resetForm} onkeydown={(e) => e.key === 'Escape' && resetForm()}>
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="modal" onclick={(e) => e.stopPropagation()}>
+			<div class="modal-header">
+				<h2 class="modal-title">New Project</h2>
+				<button type="button" class="modal-close" onclick={resetForm}>
+					<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+						<path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+					</svg>
+				</button>
+			</div>
 			<form onsubmit={(e) => { e.preventDefault(); handleCreate(); }}>
 				<div class="form-grid">
 					<div class="field full">
@@ -163,12 +176,8 @@
 				</div>
 			</form>
 		</div>
-	{/if}
-
-	<button class="fab" onclick={() => (showNewForm = !showNewForm)}>
-		{showNewForm ? '×' : '+'}
-	</button>
-</main>
+	</div>
+{/if}
 
 <style>
 	main {
@@ -198,19 +207,56 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.new-form-card {
+	.modal-backdrop {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.3);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 100;
+		padding: 1rem;
+	}
+
+	.modal {
 		background: var(--color-bg);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
 		padding: 1.5rem;
-		margin-bottom: 1.5rem;
-		box-shadow: var(--shadow-md);
+		width: 100%;
+		max-width: 480px;
+		max-height: 90vh;
+		overflow-y: auto;
+		box-shadow: var(--shadow-lg);
 	}
 
-	.form-title {
+	.modal-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1.25rem;
+	}
+
+	.modal-title {
 		font-size: 1rem;
 		font-weight: 700;
-		margin-bottom: 1.25rem;
+	}
+
+	.modal-close {
+		color: var(--color-text-secondary);
+		padding: 0.25rem;
+		border-radius: var(--radius-sm);
+		transition: all 0.15s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.modal-close:hover {
+		color: var(--color-text);
+		background: var(--color-surface);
 	}
 
 	.form-grid {
