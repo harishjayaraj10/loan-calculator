@@ -12,19 +12,16 @@
 	let newTenure = $state('');
 	let newStartMonth = $state(new Date().getMonth() + 1);
 	let newStartYear = $state(new Date().getFullYear());
+	let newEmiMode = $state<'calculate' | 'manual'>('calculate');
 	let newEmiOverride = $state('');
-	let newPreEmiInterest = $state('');
-	let newPreEmiMonth = $state(new Date().getMonth() + 1);
-	let newPreEmiYear = $state(new Date().getFullYear());
-	let showNewAdvanced = $state(false);
 	let deleteConfirm = $state<string | null>(null);
 
 	let projects = $derived(getProjects());
 
 	function handleCreate() {
 		if (!newName || !newPrincipal || !newRate || !newTenure) return;
-		const emiOverride = newEmiOverride ? Number(newEmiOverride) : undefined;
-		const preEmiInterest = newPreEmiInterest ? Number(newPreEmiInterest) : undefined;
+		if (newEmiMode === 'manual' && !newEmiOverride) return;
+		const emiOverride = newEmiMode === 'manual' && newEmiOverride ? Number(newEmiOverride) : undefined;
 		const id = addProject({
 			name: newName,
 			principal: Number(newPrincipal),
@@ -32,10 +29,7 @@
 			tenureYears: Number(newTenure),
 			startMonth: newStartMonth,
 			startYear: newStartYear,
-			emiOverride,
-			preEmiInterest,
-			preEmiMonth: preEmiInterest ? newPreEmiMonth : undefined,
-			preEmiYear: preEmiInterest ? newPreEmiYear : undefined
+			emiOverride
 		});
 		resetForm();
 		goto(`/project/${id}`);
@@ -49,11 +43,8 @@
 		newTenure = '';
 		newStartMonth = new Date().getMonth() + 1;
 		newStartYear = new Date().getFullYear();
+		newEmiMode = 'calculate';
 		newEmiOverride = '';
-		newPreEmiInterest = '';
-		newPreEmiMonth = new Date().getMonth() + 1;
-		newPreEmiYear = new Date().getFullYear();
-		showNewAdvanced = false;
 	}
 
 	function confirmDelete(id: string) {
@@ -137,38 +128,34 @@
 					</div>
 				</div>
 
-				<button type="button" class="advanced-toggle" onclick={() => showNewAdvanced = !showNewAdvanced}>
-					{showNewAdvanced ? 'Hide' : 'Show'} Advanced Options
-				</button>
-
-				{#if showNewAdvanced}
-					<div class="form-grid" style="margin-top: 1rem;">
-						<div class="field full">
-							<label for="emiOverride">EMI Override</label>
-							<input id="emiOverride" type="number" bind:value={newEmiOverride} step="1" min="0" placeholder="Leave empty for calculated EMI" />
-							<span class="field-hint">Enter your bank's actual EMI if it differs from the calculated value</span>
-						</div>
-						<div class="field full">
-							<label for="preEmiInterest">Pre-EMI Interest</label>
-							<input id="preEmiInterest" type="number" bind:value={newPreEmiInterest} step="1" min="0" placeholder="Optional" />
-							<span class="field-hint">Partial-month interest before regular EMIs began</span>
-						</div>
-						{#if newPreEmiInterest}
-							<div class="field">
-								<label for="preEmiMonth">Pre-EMI Month</label>
-								<select id="preEmiMonth" bind:value={newPreEmiMonth}>
-									{#each months as m}
-										<option value={m.value}>{m.label}</option>
-									{/each}
-								</select>
-							</div>
-							<div class="field">
-								<label for="preEmiYear">Pre-EMI Year</label>
-								<input id="preEmiYear" type="number" bind:value={newPreEmiYear} min="2000" max="2050" />
-							</div>
-						{/if}
+				<div class="emi-mode-section">
+					<label class="emi-mode-label">Monthly EMI</label>
+					<div class="emi-toggle">
+						<button
+							type="button"
+							class="emi-option"
+							class:active={newEmiMode === 'calculate'}
+							onclick={() => newEmiMode = 'calculate'}
+						>Calculate for me</button>
+						<button
+							type="button"
+							class="emi-option"
+							class:active={newEmiMode === 'manual'}
+							onclick={() => newEmiMode = 'manual'}
+						>I know my EMI</button>
 					</div>
-				{/if}
+					{#if newEmiMode === 'manual'}
+						<input
+							id="emiOverride"
+							type="number"
+							bind:value={newEmiOverride}
+							step="1"
+							min="1"
+							placeholder="Enter your bank's EMI amount"
+							required
+						/>
+					{/if}
+				</div>
 
 				<div class="form-actions">
 					<button type="button" class="btn btn-cancel" onclick={resetForm}>Cancel</button>
@@ -264,25 +251,59 @@
 		border-color: var(--color-primary);
 	}
 
-	.advanced-toggle {
-		display: block;
+	.emi-mode-section {
 		margin-top: 1rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.emi-mode-label {
 		font-size: 0.75rem;
-		font-weight: 700;
-		color: var(--color-primary);
-		cursor: pointer;
-		background: none;
-		border: none;
-		padding: 0;
-	}
-
-	.advanced-toggle:hover {
-		text-decoration: underline;
-	}
-
-	.field-hint {
-		font-size: 0.6875rem;
 		color: var(--color-text-secondary);
+		font-weight: 700;
+	}
+
+	.emi-toggle {
+		display: flex;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		overflow: hidden;
+	}
+
+	.emi-option {
+		flex: 1;
+		padding: 0.5rem 0.75rem;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		background: var(--color-bg);
+		color: var(--color-text-secondary);
+		border: none;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.emi-option:first-child {
+		border-right: 1px solid var(--color-border);
+	}
+
+	.emi-option.active {
+		background: var(--color-primary);
+		color: white;
+	}
+
+	.emi-mode-section input {
+		padding: 0.625rem 0.75rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: var(--color-bg);
+		font-size: 0.875rem;
+		transition: border-color 0.15s;
+	}
+
+	.emi-mode-section input:focus {
+		outline: none;
+		border-color: var(--color-primary);
 	}
 
 	.form-actions {
