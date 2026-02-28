@@ -102,16 +102,6 @@
 			.attr('stroke-width', 2.5)
 			.attr('d', lineWith);
 
-		const legend = g.append('g').attr('transform', `translate(${w - 180}, 0)`);
-		legend.append('line').attr('x1', 0).attr('x2', 20).attr('y1', 0).attr('y2', 0)
-			.attr('stroke', '#e5e7eb').attr('stroke-width', 2).attr('stroke-dasharray', '6,3');
-		legend.append('text').attr('x', 26).attr('y', 4).text('Without Part Pmts')
-			.style('font-size', '10px').style('font-family', 'var(--font)').attr('fill', '#6b7280');
-
-		legend.append('line').attr('x1', 0).attr('x2', 20).attr('y1', 18).attr('y2', 18)
-			.attr('stroke', '#00c4c5').attr('stroke-width', 2.5);
-		legend.append('text').attr('x', 26).attr('y', 22).text('With Part Pmts')
-			.style('font-size', '10px').style('font-family', 'var(--font)').attr('fill', '#6b7280');
 	});
 </script>
 
@@ -119,4 +109,48 @@
 	<div bind:this={wrapperEl}>
 		<svg bind:this={svgEl}></svg>
 	</div>
+	<div class="legend">
+		<span class="legend-item">
+			<span class="legend-line dashed"></span>
+			Without Part Pmts
+		</span>
+		<span class="legend-item">
+			<span class="legend-line solid"></span>
+			With Part Pmts
+		</span>
+	</div>
 </ChartContainer>
+
+<style>
+	.legend {
+		display: flex;
+		justify-content: center;
+		gap: 1.5rem;
+		padding-top: 0.75rem;
+	}
+
+	.legend-item {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-size: 0.6875rem;
+		color: #6b7280;
+		font-weight: 600;
+	}
+
+	.legend-line {
+		display: inline-block;
+		width: 20px;
+		height: 0;
+		border-top: 2.5px solid;
+	}
+
+	.legend-line.dashed {
+		border-color: #e5e7eb;
+		border-top-style: dashed;
+	}
+
+	.legend-line.solid {
+		border-color: #00c4c5;
+	}
+</style>

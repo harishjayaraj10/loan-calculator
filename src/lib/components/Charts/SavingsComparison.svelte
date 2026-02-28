@@ -91,20 +91,22 @@
 			.attr('fill', '#00c4c5')
 			.attr('rx', 4);
 
-		const legend = g.append('g').attr('transform', `translate(${w - 140}, 0)`);
-		legend.append('rect').attr('width', 12).attr('height', 12).attr('rx', 2).attr('fill', '#e5e7eb');
-		legend.append('text').attr('x', 18).attr('y', 10).text('Original')
-			.style('font-size', '10px').style('font-family', 'var(--font)').attr('fill', '#6b7280');
-
-		legend.append('rect').attr('y', 18).attr('width', 12).attr('height', 12).attr('rx', 2).attr('fill', '#00c4c5');
-		legend.append('text').attr('x', 18).attr('y', 28).text('With Part Pmts')
-			.style('font-size', '10px').style('font-family', 'var(--font)').attr('fill', '#6b7280');
 	});
 </script>
 
 <ChartContainer title="Savings Comparison">
 	<div bind:this={wrapperEl}>
 		<svg bind:this={svgEl}></svg>
+	</div>
+	<div class="legend">
+		<span class="legend-item">
+			<span class="legend-swatch original"></span>
+			Original
+		</span>
+		<span class="legend-item">
+			<span class="legend-swatch reduced"></span>
+			With Part Pmts
+		</span>
 	</div>
 </ChartContainer>
 
@@ -130,6 +132,37 @@
 {/if}
 
 <style>
+	.legend {
+		display: flex;
+		justify-content: center;
+		gap: 1.5rem;
+		padding-top: 0.75rem;
+	}
+
+	.legend-item {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-size: 0.6875rem;
+		color: #6b7280;
+		font-weight: 600;
+	}
+
+	.legend-swatch {
+		display: inline-block;
+		width: 12px;
+		height: 12px;
+		border-radius: 2px;
+	}
+
+	.legend-swatch.original {
+		background: #e5e7eb;
+	}
+
+	.legend-swatch.reduced {
+		background: #00c4c5;
+	}
+
 	.savings-summary {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);

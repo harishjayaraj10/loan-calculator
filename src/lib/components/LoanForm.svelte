@@ -117,7 +117,7 @@
 			</div>
 
 			<div class="emi-mode-section">
-				<label class="emi-mode-label">Monthly EMI</label>
+				<span class="emi-mode-label">Monthly EMI</span>
 				<div class="emi-toggle">
 					<button
 						type="button"
