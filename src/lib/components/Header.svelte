@@ -4,11 +4,13 @@
 	let {
 		title = 'Loan Calculator',
 		showBack = false,
+		hideTitle = false,
 		onback,
 		children
 	}: {
 		title?: string;
 		showBack?: boolean;
+		hideTitle?: boolean;
 		onback?: () => void;
 		children?: Snippet;
 	} = $props();
@@ -31,7 +33,9 @@
 			</button>
 		{/if}
 	</div>
-	<h1 class="header-title">{title}</h1>
+	{#if !hideTitle}
+		<h1 class="header-title">{title}</h1>
+	{/if}
 	<div class="header-right">
 		{#if children}{@render children()}{/if}
 	</div>
@@ -44,21 +48,26 @@
 		justify-content: space-between;
 		padding: 1.25rem 0;
 		gap: 1rem;
+		position: relative;
 	}
 
 	.header-left {
-		min-width: 100px;
+		min-width: 0;
 	}
 
 	.header-title {
 		font-size: 1.125rem;
 		font-weight: 700;
 		text-align: center;
-		flex: 1;
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		pointer-events: none;
+		white-space: nowrap;
 	}
 
 	.header-right {
-		min-width: 100px;
+		margin-left: auto;
 		display: flex;
 		justify-content: flex-end;
 	}
