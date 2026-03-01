@@ -44,21 +44,25 @@
 		justify-content: space-between;
 		padding: 1.25rem 0;
 		gap: 1rem;
+		position: relative;
 	}
 
 	.header-left {
-		min-width: 100px;
+		min-width: 0;
 	}
 
 	.header-title {
 		font-size: 1.125rem;
 		font-weight: 700;
 		text-align: center;
-		flex: 1;
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		pointer-events: none;
 	}
 
 	.header-right {
-		min-width: 100px;
+		margin-left: auto;
 		display: flex;
 		justify-content: flex-end;
 	}
