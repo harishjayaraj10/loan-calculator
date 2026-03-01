@@ -88,7 +88,10 @@
 </main>
 
 {#if showNewForm}
-	<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="New Project" onclick={resetForm} onkeydown={(e) => e.key === 'Escape' && resetForm()}>
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<div class="modal-backdrop" role="dialog" tabindex="-1" aria-modal="true" aria-label="New Project" onclick={resetForm} onkeydown={(e) => e.key === 'Escape' && resetForm()}>
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div class="modal" role="document" onclick={(e) => e.stopPropagation()}>
 			<div class="modal-header">
 				<h2 class="modal-title">New Project</h2>
@@ -262,8 +265,7 @@
 		font-weight: 700;
 	}
 
-	.field input,
-	.field select {
+	.field input {
 		padding: 0.625rem 0.75rem;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-sm);
@@ -272,8 +274,7 @@
 		transition: border-color 0.15s;
 	}
 
-	.field input:focus,
-	.field select:focus {
+	.field input:focus {
 		outline: none;
 		border-color: var(--color-primary);
 	}

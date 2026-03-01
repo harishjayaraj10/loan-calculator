@@ -166,7 +166,6 @@
 		font-weight: 700;
 	}
 
-	.field select,
 	.field input {
 		padding: 0.5rem 0.625rem;
 		border: 1px solid var(--color-border);
@@ -174,7 +173,6 @@
 		font-size: 0.8125rem;
 	}
 
-	.field select:focus,
 	.field input:focus {
 		outline: none;
 		border-color: var(--color-primary);
@@ -265,7 +263,6 @@
 		width: 100%;
 	}
 
-	.edit-row select,
 	.edit-row input {
 		padding: 0.375rem 0.5rem;
 		border: 1px solid var(--color-border);
