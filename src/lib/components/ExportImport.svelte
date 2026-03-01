@@ -17,7 +17,7 @@
 		onBulkDelete?: () => void;
 	} = $props();
 
-	let fileInput: HTMLInputElement;
+	let fileInput = $state<HTMLInputElement>(null!);
 	let message = $state('');
 	let menuOpen = $state(false);
 
