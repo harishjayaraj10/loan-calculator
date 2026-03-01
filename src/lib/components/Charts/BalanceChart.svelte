@@ -33,7 +33,7 @@
 				isVisible = true;
 				intersectObs.disconnect();
 			}
-		}, { threshold: 0.2 });
+		}, { rootMargin: '100px' });
 		intersectObs.observe(wrapperEl);
 
 		return () => {

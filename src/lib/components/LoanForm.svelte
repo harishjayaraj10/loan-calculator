@@ -13,8 +13,7 @@
 	let principal = $state(untrack(() => project.principal));
 	let annualRate = $state(untrack(() => project.annualRate));
 	let tenureYears = $state(untrack(() => project.tenureYears));
-	let startMonth = $state(untrack(() => project.startMonth));
-	let startYear = $state(untrack(() => project.startYear));
+	let startDate = $state(untrack(() => `${project.startYear}-${String(project.startMonth).padStart(2, '0')}`));
 	let emiMode = $state<'calculate' | 'manual'>(untrack(() => project.emiOverride ? 'manual' : 'calculate'));
 	let emiOverrideStr = $state(untrack(() => project.emiOverride?.toString() ?? ''));
 
@@ -26,8 +25,7 @@
 		principal = project.principal;
 		annualRate = project.annualRate;
 		tenureYears = project.tenureYears;
-		startMonth = project.startMonth;
-		startYear = project.startYear;
+		startDate = `${project.startYear}-${String(project.startMonth).padStart(2, '0')}`;
 		emiMode = project.emiOverride ? 'manual' : 'calculate';
 		emiOverrideStr = project.emiOverride?.toString() ?? '';
 	});
@@ -39,13 +37,14 @@
 	function save() {
 		if (emiMode === 'manual' && !emiOverrideStr) return;
 		const emiOverride = emiMode === 'manual' && emiOverrideStr ? Number(emiOverrideStr) : undefined;
+		const [sYear, sMonth] = startDate.split('-').map(Number);
 		updateProject(project.id, {
 			name,
 			principal: Number(principal),
 			annualRate: Number(annualRate),
 			tenureYears: Number(tenureYears),
-			startMonth: Number(startMonth),
-			startYear: Number(startYear),
+			startMonth: sMonth,
+			startYear: sYear,
 			emiOverride
 		});
 		editing = false;
@@ -56,23 +55,16 @@
 		principal = project.principal;
 		annualRate = project.annualRate;
 		tenureYears = project.tenureYears;
-		startMonth = project.startMonth;
-		startYear = project.startYear;
+		startDate = `${project.startYear}-${String(project.startMonth).padStart(2, '0')}`;
 		emiMode = project.emiOverride ? 'manual' : 'calculate';
 		emiOverrideStr = project.emiOverride?.toString() ?? '';
 		editing = false;
 	}
 
-	const months = [
-		{ value: 1, label: 'Jan' }, { value: 2, label: 'Feb' },
-		{ value: 3, label: 'Mar' }, { value: 4, label: 'Apr' },
-		{ value: 5, label: 'May' }, { value: 6, label: 'Jun' },
-		{ value: 7, label: 'Jul' }, { value: 8, label: 'Aug' },
-		{ value: 9, label: 'Sep' }, { value: 10, label: 'Oct' },
-		{ value: 11, label: 'Nov' }, { value: 12, label: 'Dec' }
-	];
-
-	const monthLabel = (m: number) => months.find(x => x.value === m)?.label ?? '';
+	const formatStartDate = (m: number, y: number) => {
+		const date = new Date(y, m - 1);
+		return date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+	};
 </script>
 
 <div class="form-card">
@@ -103,16 +95,8 @@
 					<input id="edit-tenure" type="number" bind:value={tenureYears} min="1" max="40" required />
 				</div>
 				<div class="field">
-					<label for="edit-start-month">Start Month</label>
-					<select id="edit-start-month" bind:value={startMonth}>
-						{#each months as m}
-							<option value={m.value}>{m.label}</option>
-						{/each}
-					</select>
-				</div>
-				<div class="field">
-					<label for="edit-start-year">Start Year</label>
-					<input id="edit-start-year" type="number" bind:value={startYear} min="2000" max="2050" />
+					<label for="edit-start-date">Start Month</label>
+					<input id="edit-start-date" type="month" bind:value={startDate} min="2000-01" max="2050-12" />
 				</div>
 			</div>
 
@@ -168,7 +152,7 @@
 			</div>
 			<div class="detail">
 				<span class="detail-label">Start Date</span>
-				<span class="detail-value">{monthLabel(project.startMonth)} {project.startYear}</span>
+				<span class="detail-value">{formatStartDate(project.startMonth, project.startYear)}</span>
 			</div>
 			<div class="detail">
 				<span class="detail-label">Monthly EMI</span>

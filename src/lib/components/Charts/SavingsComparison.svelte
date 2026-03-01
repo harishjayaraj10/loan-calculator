@@ -32,7 +32,7 @@
 				isVisible = true;
 				intersectObs.disconnect();
 			}
-		}, { threshold: 0.2 });
+		}, { rootMargin: '100px' });
 		intersectObs.observe(wrapperEl);
 
 		return () => {
@@ -113,11 +113,13 @@
 				d3.select(this).transition('hover').duration(150).attr('opacity', 0.8);
 				tooltip.html(`<strong>${d.label}</strong><br>Original: ${formatVal(d.label, d.original)}`)
 					.style('opacity', '1');
-				const rect = (this as SVGRectElement).getBoundingClientRect();
-				const wrapRect = wrapperEl.getBoundingClientRect();
-				tooltip.style('left', `${rect.left - wrapRect.left + rect.width / 2}px`)
-					.style('top', `${rect.top - wrapRect.top - 8}px`)
-					.style('transform', 'translate(-50%, -100%)');
+				const barX = margin.left + (x0(d.label) || 0) + (x1('original') || 0) + x1.bandwidth() / 2;
+				const barTop = margin.top + y(d.original);
+				const tooltipH = tooltipEl.offsetHeight;
+				const topPos = barTop - tooltipH - 8 < 0 ? barTop + 8 : barTop - tooltipH - 8;
+				tooltip.style('left', `${barX}px`)
+					.style('top', `${topPos}px`)
+					.style('transform', 'translateX(-50%)');
 			})
 			.on('mouseleave', function() {
 				d3.select(this).transition('hover').duration(150).attr('opacity', 1);
@@ -146,11 +148,13 @@
 				d3.select(this).transition('hover').duration(150).attr('opacity', 0.8);
 				tooltip.html(`<strong>${d.label}</strong><br>With Part Pmts: ${formatVal(d.label, d.reduced)}`)
 					.style('opacity', '1');
-				const rect = (this as SVGRectElement).getBoundingClientRect();
-				const wrapRect = wrapperEl.getBoundingClientRect();
-				tooltip.style('left', `${rect.left - wrapRect.left + rect.width / 2}px`)
-					.style('top', `${rect.top - wrapRect.top - 8}px`)
-					.style('transform', 'translate(-50%, -100%)');
+				const barX = margin.left + (x0(d.label) || 0) + (x1('reduced') || 0) + x1.bandwidth() / 2;
+				const barTop = margin.top + y(d.reduced);
+				const tooltipH = tooltipEl.offsetHeight;
+				const topPos = barTop - tooltipH - 8 < 0 ? barTop + 8 : barTop - tooltipH - 8;
+				tooltip.style('left', `${barX}px`)
+					.style('top', `${topPos}px`)
+					.style('transform', 'translateX(-50%)');
 			})
 			.on('mouseleave', function() {
 				d3.select(this).transition('hover').duration(150).attr('opacity', 1);
