@@ -1,42 +1,33 @@
-# sv
+# Loan Calculator
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Plan your home loan, track part payments, and see exactly how much interest and time you save.
 
-## Creating a project
+**Try it:** [harishjayaraj10.github.io/loan-calculator](https://harishjayaraj10.github.io/loan-calculator)
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Why this exists
 
-```sh
-# create a new project
-npx sv create my-app
-```
+Banks give you an EMI amount and a tenure, but they don't make it easy to answer questions like:
 
-To recreate this project with the same configuration:
+- If I put in 2 lakhs extra this year, how many months do I shave off?
+- How much total interest am I saving with my part payments?
+- My bank's EMI is slightly different from the formula — can I use the exact number?
 
-```sh
-# recreate this project
-npx sv create --template minimal --types ts --install npm .
-```
+This tool lets you model your actual loan, plug in your bank's EMI, add part payments, and instantly see the impact on your tenure and total interest — with a full amortization schedule that matches your bank's statement.
 
-## Developing
+## What you can do
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+**Set up your loan** — enter principal, rate, tenure, and start date. Use the calculated EMI or enter your bank's exact EMI amount.
 
-```sh
-npm run dev
+**Add part payments** — record any lump-sum payments you've made or plan to make. The amortization schedule updates instantly to show the reduced balance and shorter tenure.
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+**See the savings** — interactive charts show your balance trajectory, interest vs principal breakdown, and a side-by-side comparison of your loan with and without part payments. Summary cards show months saved, interest saved, and your new end date.
 
-## Building
+**Track multiple loans** — manage home loan, car loan, personal loan — each as a separate project with its own schedule and analysis.
 
-To create a production version of your app:
+**Full amortization table** — month-by-month breakdown showing opening balance, interest, principal, part payments, and closing balance. Matches bank statements when using the EMI override.
 
-```sh
-npm run build
-```
+**Export and import** — download your projects as JSON to back up or transfer between devices. Everything runs in the browser with no account needed.
 
-You can preview the production build with `npm run preview`.
+## Privacy
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+All data stays in your browser (localStorage). Nothing is sent to any server.
