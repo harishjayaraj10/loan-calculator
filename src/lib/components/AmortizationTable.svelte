@@ -25,10 +25,7 @@
 		</thead>
 		<tbody>
 			{#each schedule as row, i}
-				<tr
-					class:paid={i < paidCount}
-					class:has-part-payment={row.partPayment > 0}
-				>
+				<tr class:paid={i < paidCount} class:has-part-payment={row.partPayment > 0}>
 					<td class="num">{row.monthIndex + 1}</td>
 					<td class="month">{formatMonthYear(row.month, row.year)}</td>
 					<td class="amount">{formatCurrency(row.openingBalance)}</td>

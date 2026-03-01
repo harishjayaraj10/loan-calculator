@@ -3,7 +3,11 @@
 	import { calculateEMI, getPaidEMIs } from '$lib/utils/calculations';
 	import { formatCurrency } from '$lib/utils/formatters';
 
-	let { project, onclick, ondelete }: {
+	let {
+		project,
+		onclick,
+		ondelete
+	}: {
 		project: LoanProject;
 		onclick: () => void;
 		ondelete: () => void;
@@ -16,12 +20,19 @@
 	let progress = $derived(Math.min((paidMonths / totalMonths) * 100, 100));
 </script>
 
-<div class="card" role="button" tabindex="0" onclick={onclick} onkeydown={(e) => e.key === 'Enter' && onclick()}>
+<div class="card" role="button" tabindex="0" {onclick} onkeydown={(e) => e.key === 'Enter' && onclick()}>
 	<div class="card-header">
 		<h3 class="card-title">{project.name}</h3>
-		<button class="delete-btn" onclick={(e) => { e.stopPropagation(); ondelete(); }} title="Delete project">
+		<button
+			class="delete-btn"
+			onclick={(e) => {
+				e.stopPropagation();
+				ondelete();
+			}}
+			title="Delete project"
+		>
 			<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-				<path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+				<path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
 			</svg>
 		</button>
 	</div>

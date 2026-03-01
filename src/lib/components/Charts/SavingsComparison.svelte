@@ -27,12 +27,15 @@
 		});
 		resizeObs.observe(wrapperEl);
 
-		const intersectObs = new IntersectionObserver((entries) => {
-			if (entries[0].isIntersecting) {
-				isVisible = true;
-				intersectObs.disconnect();
-			}
-		}, { rootMargin: '100px' });
+		const intersectObs = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting) {
+					isVisible = true;
+					intersectObs.disconnect();
+				}
+			},
+			{ rootMargin: '100px' }
+		);
 		intersectObs.observe(wrapperEl);
 
 		return () => {
@@ -66,7 +69,11 @@
 			{ label: 'Total Interest', original: savings.originalTotalInterest, reduced: savings.reducedTotalInterest }
 		];
 
-		const x0 = d3.scaleBand().domain(data.map((d) => d.label)).range([0, w]).padding(0.3);
+		const x0 = d3
+			.scaleBand()
+			.domain(data.map((d) => d.label))
+			.range([0, w])
+			.padding(0.3);
 		const x1 = d3.scaleBand().domain(['original', 'reduced']).range([0, x0.bandwidth()]).padding(0.1);
 
 		const yMax = d3.max(data, (d) => Math.max(d.original, d.reduced)) || 0;
@@ -80,20 +87,26 @@
 			.style('font-family', 'var(--font)');
 
 		g.append('g')
-			.call(d3.axisLeft(y).ticks(5).tickFormat((d) => {
-				const val = d as number;
-				if (val >= 10000000) return `${(val / 10000000).toFixed(1)}Cr`;
-				if (val >= 100000) return `${(val / 100000).toFixed(1)}L`;
-				if (val >= 1000) return `${(val / 1000).toFixed(0)}K`;
-				return String(val);
-			}))
+			.call(
+				d3
+					.axisLeft(y)
+					.ticks(5)
+					.tickFormat((d) => {
+						const val = d as number;
+						if (val >= 10000000) return `${(val / 10000000).toFixed(1)}Cr`;
+						if (val >= 100000) return `${(val / 100000).toFixed(1)}L`;
+						if (val >= 1000) return `${(val / 1000).toFixed(0)}K`;
+						return String(val);
+					})
+			)
 			.selectAll('text')
 			.style('font-size', '10px')
 			.style('font-family', 'var(--font)');
 
 		const tooltip = d3.select(tooltipEl);
 
-		const groups = g.selectAll('.group')
+		const groups = g
+			.selectAll('.group')
 			.data(data)
 			.join('g')
 			.attr('transform', (d) => `translate(${x0(d.label)},0)`);
@@ -101,7 +114,8 @@
 		const animate = !hasAnimated;
 
 		// Original bars
-		const origBars = groups.append('rect')
+		const origBars = groups
+			.append('rect')
 			.attr('x', x1('original')!)
 			.attr('y', animate ? h : (d) => y(d.original))
 			.attr('width', x1.bandwidth())
@@ -109,25 +123,25 @@
 			.attr('fill', '#e5e7eb')
 			.attr('rx', 4)
 			.style('cursor', 'pointer')
-			.on('mouseenter', function(event: MouseEvent, d) {
+			.on('mouseenter', function (event: MouseEvent, d) {
 				d3.select(this).transition('hover').duration(150).attr('opacity', 0.8);
-				tooltip.html(`<strong>${d.label}</strong><br>Original: ${formatVal(d.label, d.original)}`)
+				tooltip
+					.html(`<strong>${d.label}</strong><br>Original: ${formatVal(d.label, d.original)}`)
 					.style('opacity', '1');
 				const barX = margin.left + (x0(d.label) || 0) + (x1('original') || 0) + x1.bandwidth() / 2;
 				const barTop = margin.top + y(d.original);
 				const tooltipH = tooltipEl.offsetHeight;
 				const topPos = barTop - tooltipH - 8 < 0 ? barTop + 8 : barTop - tooltipH - 8;
-				tooltip.style('left', `${barX}px`)
-					.style('top', `${topPos}px`)
-					.style('transform', 'translateX(-50%)');
+				tooltip.style('left', `${barX}px`).style('top', `${topPos}px`).style('transform', 'translateX(-50%)');
 			})
-			.on('mouseleave', function() {
+			.on('mouseleave', function () {
 				d3.select(this).transition('hover').duration(150).attr('opacity', 1);
 				tooltip.style('opacity', '0');
 			});
 
 		if (animate) {
-			origBars.transition('grow')
+			origBars
+				.transition('grow')
 				.duration(600)
 				.delay(100)
 				.ease(d3.easeCubicOut)
@@ -136,7 +150,8 @@
 		}
 
 		// Reduced bars
-		const reducedBars = groups.append('rect')
+		const reducedBars = groups
+			.append('rect')
 			.attr('x', x1('reduced')!)
 			.attr('y', animate ? h : (d) => y(d.reduced))
 			.attr('width', x1.bandwidth())
@@ -144,25 +159,25 @@
 			.attr('fill', '#00c4c5')
 			.attr('rx', 4)
 			.style('cursor', 'pointer')
-			.on('mouseenter', function(event: MouseEvent, d) {
+			.on('mouseenter', function (event: MouseEvent, d) {
 				d3.select(this).transition('hover').duration(150).attr('opacity', 0.8);
-				tooltip.html(`<strong>${d.label}</strong><br>With Part Pmts: ${formatVal(d.label, d.reduced)}`)
+				tooltip
+					.html(`<strong>${d.label}</strong><br>With Part Pmts: ${formatVal(d.label, d.reduced)}`)
 					.style('opacity', '1');
 				const barX = margin.left + (x0(d.label) || 0) + (x1('reduced') || 0) + x1.bandwidth() / 2;
 				const barTop = margin.top + y(d.reduced);
 				const tooltipH = tooltipEl.offsetHeight;
 				const topPos = barTop - tooltipH - 8 < 0 ? barTop + 8 : barTop - tooltipH - 8;
-				tooltip.style('left', `${barX}px`)
-					.style('top', `${topPos}px`)
-					.style('transform', 'translateX(-50%)');
+				tooltip.style('left', `${barX}px`).style('top', `${topPos}px`).style('transform', 'translateX(-50%)');
 			})
-			.on('mouseleave', function() {
+			.on('mouseleave', function () {
 				d3.select(this).transition('hover').duration(150).attr('opacity', 1);
 				tooltip.style('opacity', '0');
 			});
 
 		if (animate) {
-			reducedBars.transition('grow')
+			reducedBars
+				.transition('grow')
 				.duration(600)
 				.delay(250)
 				.ease(d3.easeCubicOut)

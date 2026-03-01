@@ -56,10 +56,7 @@ export function addProject(data: {
 	return id;
 }
 
-export function updateProject(
-	id: string,
-	data: Partial<Omit<LoanProject, 'id' | 'createdAt' | 'partPayments'>>
-) {
+export function updateProject(id: string, data: Partial<Omit<LoanProject, 'id' | 'createdAt' | 'partPayments'>>) {
 	const idx = projects.findIndex((p) => p.id === id);
 	if (idx === -1) return;
 	projects[idx] = { ...projects[idx], ...data };
@@ -73,7 +70,10 @@ export function deleteProject(id: string) {
 	saveToStorage(projects);
 }
 
-export function addPartPayment(projectId: string, data: { month: number; year: number; amount: number }): string | null {
+export function addPartPayment(
+	projectId: string,
+	data: { month: number; year: number; amount: number }
+): string | null {
 	const project = projects.find((p) => p.id === projectId);
 	if (!project) return null;
 	const id = generateId();
@@ -108,9 +108,7 @@ export function updatePartPayment(
 }
 
 export function exportProjects(projectIds?: string[]): ExportData {
-	const toExport = projectIds
-		? projects.filter((p) => projectIds.includes(p.id))
-		: projects;
+	const toExport = projectIds ? projects.filter((p) => projectIds.includes(p.id)) : projects;
 
 	return {
 		version: 1,

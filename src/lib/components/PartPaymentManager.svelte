@@ -43,16 +43,18 @@
 		editingId = null;
 	}
 
-	let sortedPayments = $derived(
-		[...project.partPayments].sort((a, b) => a.year - b.year || a.month - b.month)
-	);
-
+	let sortedPayments = $derived([...project.partPayments].sort((a, b) => a.year - b.year || a.month - b.month));
 </script>
 
 <div class="pp-section">
 	<div class="add-form">
 		<h3 class="section-heading">Add Part Payment</h3>
-		<form onsubmit={(e) => { e.preventDefault(); handleAdd(); }}>
+		<form
+			onsubmit={(e) => {
+				e.preventDefault();
+				handleAdd();
+			}}
+		>
 			<div class="form-row">
 				<div class="field">
 					<label for="pp-date">Month</label>
@@ -75,17 +77,29 @@
 			{#each sortedPayments as pp (pp.id)}
 				<div class="pp-item" class:editing={editingId === pp.id}>
 					{#if editingId === pp.id}
-						<form class="edit-row" onsubmit={(e) => { e.preventDefault(); saveEdit(); }}>
+						<form
+							class="edit-row"
+							onsubmit={(e) => {
+								e.preventDefault();
+								saveEdit();
+							}}
+						>
 							<input type="month" bind:value={editDate} min="2000-01" max="2060-12" class="date-input" />
 							<input type="number" bind:value={editAmount} min="1" class="amount-input" />
 							<button type="submit" class="btn-icon save" title="Save">
 								<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-									<path d="M3 8L6.5 11.5L13 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+									<path
+										d="M3 8L6.5 11.5L13 4.5"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									/>
 								</svg>
 							</button>
 							<button type="button" class="btn-icon cancel" onclick={cancelEdit} title="Cancel">
 								<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-									<path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+									<path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
 								</svg>
 							</button>
 						</form>
@@ -97,12 +111,17 @@
 						<div class="pp-actions">
 							<button class="btn-icon edit" onclick={() => startEdit(pp)} title="Edit">
 								<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-									<path d="M10 1.5L12.5 4L4.5 12H2V9.5L10 1.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+									<path
+										d="M10 1.5L12.5 4L4.5 12H2V9.5L10 1.5Z"
+										stroke="currentColor"
+										stroke-width="1.5"
+										stroke-linejoin="round"
+									/>
 								</svg>
 							</button>
 							<button class="btn-icon delete" onclick={() => removePartPayment(project.id, pp.id)} title="Delete">
 								<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-									<path d="M3 3L11 11M11 3L3 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+									<path d="M3 3L11 11M11 3L3 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
 								</svg>
 							</button>
 						</div>
@@ -251,10 +270,20 @@
 		transition: all 0.15s;
 	}
 
-	.btn-icon.edit:hover { color: var(--color-primary); background: var(--color-primary-light); }
-	.btn-icon.delete:hover { color: var(--color-danger); background: #fef2f2; }
-	.btn-icon.save { color: var(--color-success); }
-	.btn-icon.cancel { color: var(--color-text-secondary); }
+	.btn-icon.edit:hover {
+		color: var(--color-primary);
+		background: var(--color-primary-light);
+	}
+	.btn-icon.delete:hover {
+		color: var(--color-danger);
+		background: #fef2f2;
+	}
+	.btn-icon.save {
+		color: var(--color-success);
+	}
+	.btn-icon.cancel {
+		color: var(--color-text-secondary);
+	}
 
 	.edit-row {
 		display: flex;
@@ -270,8 +299,12 @@
 		font-size: 0.75rem;
 	}
 
-	.date-input { width: 140px; }
-	.amount-input { flex: 1; }
+	.date-input {
+		width: 140px;
+	}
+	.amount-input {
+		flex: 1;
+	}
 
 	.empty {
 		text-align: center;
@@ -279,8 +312,13 @@
 		color: var(--color-text-secondary);
 	}
 
-	.empty p { font-size: 0.875rem; }
-	.empty-sub { font-size: 0.75rem; margin-top: 0.375rem; }
+	.empty p {
+		font-size: 0.875rem;
+	}
+	.empty-sub {
+		font-size: 0.75rem;
+		margin-top: 0.375rem;
+	}
 
 	@media (max-width: 640px) {
 		.form-row {

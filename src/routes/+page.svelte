@@ -55,7 +55,6 @@
 			setTimeout(() => (deleteConfirm = null), 3000);
 		}
 	}
-
 </script>
 
 <Header title="Loan Calculator">
@@ -89,7 +88,15 @@
 
 {#if showNewForm}
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-	<div class="modal-backdrop" role="dialog" tabindex="-1" aria-modal="true" aria-label="New Project" onclick={resetForm} onkeydown={(e) => e.key === 'Escape' && resetForm()}>
+	<div
+		class="modal-backdrop"
+		role="dialog"
+		tabindex="-1"
+		aria-modal="true"
+		aria-label="New Project"
+		onclick={resetForm}
+		onkeydown={(e) => e.key === 'Escape' && resetForm()}
+	>
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div class="modal" role="document" onclick={(e) => e.stopPropagation()}>
@@ -97,11 +104,16 @@
 				<h2 class="modal-title">New Project</h2>
 				<button type="button" class="modal-close" aria-label="Close" onclick={resetForm}>
 					<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-						<path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+						<path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
 					</svg>
 				</button>
 			</div>
-			<form onsubmit={(e) => { e.preventDefault(); handleCreate(); }}>
+			<form
+				onsubmit={(e) => {
+					e.preventDefault();
+					handleCreate();
+				}}
+			>
 				<div class="form-grid">
 					<div class="field full">
 						<label for="name">Project Name</label>
@@ -132,14 +144,14 @@
 							type="button"
 							class="emi-option"
 							class:active={newEmiMode === 'calculate'}
-							onclick={() => newEmiMode = 'calculate'}
-						>Calculate for me</button>
+							onclick={() => (newEmiMode = 'calculate')}>Calculate for me</button
+						>
 						<button
 							type="button"
 							class="emi-option"
 							class:active={newEmiMode === 'manual'}
-							onclick={() => newEmiMode = 'manual'}
-						>I know my EMI</button>
+							onclick={() => (newEmiMode = 'manual')}>I know my EMI</button
+						>
 					</div>
 					{#if newEmiMode === 'manual'}
 						<input

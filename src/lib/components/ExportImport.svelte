@@ -43,13 +43,7 @@
 <div class="export-import">
 	<button class="btn btn-secondary" onclick={handleExport}>Export</button>
 	<button class="btn btn-secondary" onclick={handleImport}>Import</button>
-	<input
-		bind:this={fileInput}
-		type="file"
-		accept=".json"
-		onchange={onFileSelected}
-		hidden
-	/>
+	<input bind:this={fileInput} type="file" accept=".json" onchange={onFileSelected} hidden />
 	{#if message}
 		<span class="message">{message}</span>
 	{/if}

@@ -1,5 +1,9 @@
 <script lang="ts">
-	let { tabs, activeTab, onchange }: {
+	let {
+		tabs,
+		activeTab,
+		onchange
+	}: {
 		tabs: { id: string; label: string }[];
 		activeTab: string;
 		onchange: (id: string) => void;
@@ -8,11 +12,7 @@
 
 <nav class="tab-bar">
 	{#each tabs as tab}
-		<button
-			class="tab"
-			class:active={activeTab === tab.id}
-			onclick={() => onchange(tab.id)}
-		>
+		<button class="tab" class:active={activeTab === tab.id} onclick={() => onchange(tab.id)}>
 			{tab.label}
 		</button>
 	{/each}
