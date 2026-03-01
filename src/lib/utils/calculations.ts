@@ -12,10 +12,7 @@ function addMonth(month: number, year: number): { month: number; year: number } 
 	return { month: month + 1, year };
 }
 
-export function generateAmortization(
-	project: LoanProject,
-	includePartPayments: boolean = true
-): AmortizationRow[] {
+export function generateAmortization(project: LoanProject, includePartPayments: boolean = true): AmortizationRow[] {
 	const r = project.annualRate / 12 / 100;
 	const n = project.tenureYears * 12;
 	const calculatedEmi = calculateEMI(project.principal, project.annualRate, project.tenureYears);

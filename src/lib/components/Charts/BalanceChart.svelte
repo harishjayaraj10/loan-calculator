@@ -28,12 +28,15 @@
 		});
 		resizeObs.observe(wrapperEl);
 
-		const intersectObs = new IntersectionObserver((entries) => {
-			if (entries[0].isIntersecting) {
-				isVisible = true;
-				intersectObs.disconnect();
-			}
-		}, { rootMargin: '100px' });
+		const intersectObs = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting) {
+					isVisible = true;
+					intersectObs.disconnect();
+				}
+			},
+			{ rootMargin: '100px' }
+		);
 		intersectObs.observe(wrapperEl);
 
 		return () => {
@@ -60,21 +63,30 @@
 		const allData = [...withoutPP, ...withPP];
 		const xMax = Math.max(withoutPP.length, withPP.length);
 
-		const x = d3.scaleLinear().domain([0, xMax - 1]).range([0, w]);
-		const y = d3.scaleLinear()
+		const x = d3
+			.scaleLinear()
+			.domain([0, xMax - 1])
+			.range([0, w]);
+		const y = d3
+			.scaleLinear()
 			.domain([0, d3.max(allData, (d) => d.openingBalance) || 0])
 			.nice()
 			.range([h, 0]);
 
 		g.append('g')
 			.attr('transform', `translate(0,${h})`)
-			.call(d3.axisBottom(x).ticks(Math.min(xMax, 10)).tickFormat((d) => {
-				const idx = d as number;
-				if (idx >= 0 && idx < withoutPP.length) {
-					return formatMonthYear(withoutPP[idx].month, withoutPP[idx].year);
-				}
-				return '';
-			}))
+			.call(
+				d3
+					.axisBottom(x)
+					.ticks(Math.min(xMax, 10))
+					.tickFormat((d) => {
+						const idx = d as number;
+						if (idx >= 0 && idx < withoutPP.length) {
+							return formatMonthYear(withoutPP[idx].month, withoutPP[idx].year);
+						}
+						return '';
+					})
+			)
 			.selectAll('text')
 			.style('font-size', '9px')
 			.style('font-family', 'var(--font)')
@@ -82,29 +94,37 @@
 			.style('text-anchor', 'end');
 
 		g.append('g')
-			.call(d3.axisLeft(y).ticks(5).tickFormat((d) => {
-				const val = d as number;
-				if (val >= 10000000) return `${(val / 10000000).toFixed(1)}Cr`;
-				if (val >= 100000) return `${(val / 100000).toFixed(1)}L`;
-				if (val >= 1000) return `${(val / 1000).toFixed(0)}K`;
-				return String(val);
-			}))
+			.call(
+				d3
+					.axisLeft(y)
+					.ticks(5)
+					.tickFormat((d) => {
+						const val = d as number;
+						if (val >= 10000000) return `${(val / 10000000).toFixed(1)}Cr`;
+						if (val >= 100000) return `${(val / 100000).toFixed(1)}L`;
+						if (val >= 1000) return `${(val / 1000).toFixed(0)}K`;
+						return String(val);
+					})
+			)
 			.selectAll('text')
 			.style('font-size', '10px')
 			.style('font-family', 'var(--font)');
 
-		const lineWithout = d3.line<(typeof withoutPP)[0]>()
+		const lineWithout = d3
+			.line<(typeof withoutPP)[0]>()
 			.x((_, i) => x(i))
 			.y((d) => y(d.openingBalance))
 			.curve(d3.curveMonotoneX);
 
-		const lineWith = d3.line<(typeof withPP)[0]>()
+		const lineWith = d3
+			.line<(typeof withPP)[0]>()
 			.x((_, i) => x(i))
 			.y((d) => y(d.openingBalance))
 			.curve(d3.curveMonotoneX);
 
 		// Draw lines with animation
-		const pathWithout = g.append('path')
+		const pathWithout = g
+			.append('path')
 			.datum(withoutPP)
 			.attr('fill', 'none')
 			.attr('stroke', '#e5e7eb')
@@ -112,7 +132,8 @@
 			.attr('stroke-dasharray', '6,3')
 			.attr('d', lineWithout);
 
-		const pathWith = g.append('path')
+		const pathWith = g
+			.append('path')
 			.datum(withPP)
 			.attr('fill', 'none')
 			.attr('stroke', '#00c4c5')
@@ -130,7 +151,7 @@
 					.duration(1200)
 					.ease(d3.easeQuadOut)
 					.attr('stroke-dashoffset', 0)
-					.on('end', function() {
+					.on('end', function () {
 						if (path === pathWithout) {
 							d3.select(this).attr('stroke-dasharray', '6,3');
 						} else {
@@ -142,26 +163,39 @@
 		}
 
 		// Hover crosshair + dots + tooltip
-		const crosshair = g.append('line')
-			.attr('y1', 0).attr('y2', h)
+		const crosshair = g
+			.append('line')
+			.attr('y1', 0)
+			.attr('y2', h)
 			.attr('stroke', '#9ca3af')
 			.attr('stroke-width', 1)
 			.attr('stroke-dasharray', '3,3')
 			.style('opacity', 0)
 			.style('pointer-events', 'none');
 
-		const dotWithout = g.append('circle')
-			.attr('r', 4).attr('fill', '#e5e7eb').attr('stroke', '#fff').attr('stroke-width', 2)
-			.style('opacity', 0).style('pointer-events', 'none');
+		const dotWithout = g
+			.append('circle')
+			.attr('r', 4)
+			.attr('fill', '#e5e7eb')
+			.attr('stroke', '#fff')
+			.attr('stroke-width', 2)
+			.style('opacity', 0)
+			.style('pointer-events', 'none');
 
-		const dotWith = g.append('circle')
-			.attr('r', 4).attr('fill', '#00c4c5').attr('stroke', '#fff').attr('stroke-width', 2)
-			.style('opacity', 0).style('pointer-events', 'none');
+		const dotWith = g
+			.append('circle')
+			.attr('r', 4)
+			.attr('fill', '#00c4c5')
+			.attr('stroke', '#fff')
+			.attr('stroke-width', 2)
+			.style('opacity', 0)
+			.style('pointer-events', 'none');
 
 		const tooltip = d3.select(tooltipEl);
 
 		g.append('rect')
-			.attr('width', w).attr('height', h)
+			.attr('width', w)
+			.attr('height', h)
 			.attr('fill', 'transparent')
 			.on('mousemove', (event: MouseEvent) => {
 				const [mx] = d3.pointer(event);

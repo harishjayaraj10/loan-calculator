@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { onMount, type Snippet } from 'svelte';
 
-	let { title = '', children }: {
+	let {
+		title = '',
+		children
+	}: {
 		title?: string;
 		children?: Snippet;
 	} = $props();

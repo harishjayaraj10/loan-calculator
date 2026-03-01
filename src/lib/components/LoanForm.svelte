@@ -14,11 +14,13 @@
 	let annualRate = $state(untrack(() => project.annualRate));
 	let tenureYears = $state(untrack(() => project.tenureYears));
 	let startDate = $state(untrack(() => `${project.startYear}-${String(project.startMonth).padStart(2, '0')}`));
-	let emiMode = $state<'calculate' | 'manual'>(untrack(() => project.emiOverride ? 'manual' : 'calculate'));
+	let emiMode = $state<'calculate' | 'manual'>(untrack(() => (project.emiOverride ? 'manual' : 'calculate')));
 	let emiOverrideStr = $state(untrack(() => project.emiOverride?.toString() ?? ''));
 
 	let calculatedEmi = $derived(calculateEMI(Number(principal) || 0, Number(annualRate) || 0, Number(tenureYears) || 1));
-	let displayEmi = $derived(project.emiOverride || calculateEMI(project.principal, project.annualRate, project.tenureYears));
+	let displayEmi = $derived(
+		project.emiOverride || calculateEMI(project.principal, project.annualRate, project.tenureYears)
+	);
 
 	$effect(() => {
 		name = project.name;
@@ -76,7 +78,12 @@
 	</div>
 
 	{#if editing}
-		<form onsubmit={(e) => { e.preventDefault(); save(); }}>
+		<form
+			onsubmit={(e) => {
+				e.preventDefault();
+				save();
+			}}
+		>
 			<div class="form-grid">
 				<div class="field full">
 					<label for="edit-name">Project Name</label>
@@ -107,14 +114,14 @@
 						type="button"
 						class="emi-option"
 						class:active={emiMode === 'calculate'}
-						onclick={() => emiMode = 'calculate'}
-					>Calculate for me</button>
+						onclick={() => (emiMode = 'calculate')}>Calculate for me</button
+					>
 					<button
 						type="button"
 						class="emi-option"
 						class:active={emiMode === 'manual'}
-						onclick={() => emiMode = 'manual'}
-					>I know my EMI</button>
+						onclick={() => (emiMode = 'manual')}>I know my EMI</button
+					>
 				</div>
 				{#if emiMode === 'manual'}
 					<input

@@ -27,12 +27,15 @@
 		});
 		resizeObs.observe(wrapperEl);
 
-		const intersectObs = new IntersectionObserver((entries) => {
-			if (entries[0].isIntersecting) {
-				isVisible = true;
-				intersectObs.disconnect();
-			}
-		}, { rootMargin: '100px' });
+		const intersectObs = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting) {
+					isVisible = true;
+					intersectObs.disconnect();
+				}
+			},
+			{ rootMargin: '100px' }
+		);
 		intersectObs.observe(wrapperEl);
 
 		return () => {
@@ -56,19 +59,27 @@
 
 		const g = sel.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-		const x = d3.scaleLinear().domain([0, schedule.length - 1]).range([0, w]);
+		const x = d3
+			.scaleLinear()
+			.domain([0, schedule.length - 1])
+			.range([0, w]);
 		const yMax = d3.max(schedule, (d) => d.interest + d.principal) || 0;
 		const y = d3.scaleLinear().domain([0, yMax]).nice().range([h, 0]);
 
 		g.append('g')
 			.attr('transform', `translate(0,${h})`)
-			.call(d3.axisBottom(x).ticks(Math.min(schedule.length, 10)).tickFormat((d) => {
-				const idx = d as number;
-				if (idx >= 0 && idx < schedule.length) {
-					return formatMonthYear(schedule[idx].month, schedule[idx].year);
-				}
-				return '';
-			}))
+			.call(
+				d3
+					.axisBottom(x)
+					.ticks(Math.min(schedule.length, 10))
+					.tickFormat((d) => {
+						const idx = d as number;
+						if (idx >= 0 && idx < schedule.length) {
+							return formatMonthYear(schedule[idx].month, schedule[idx].year);
+						}
+						return '';
+					})
+			)
 			.selectAll('text')
 			.style('font-size', '9px')
 			.style('font-family', 'var(--font)')
@@ -76,12 +87,17 @@
 			.style('text-anchor', 'end');
 
 		g.append('g')
-			.call(d3.axisLeft(y).ticks(5).tickFormat((d) => {
-				const val = d as number;
-				if (val >= 100000) return `${(val / 100000).toFixed(1)}L`;
-				if (val >= 1000) return `${(val / 1000).toFixed(0)}K`;
-				return String(val);
-			}))
+			.call(
+				d3
+					.axisLeft(y)
+					.ticks(5)
+					.tickFormat((d) => {
+						const val = d as number;
+						if (val >= 100000) return `${(val / 100000).toFixed(1)}L`;
+						if (val >= 1000) return `${(val / 1000).toFixed(0)}K`;
+						return String(val);
+					})
+			)
 			.selectAll('text')
 			.style('font-size', '10px')
 			.style('font-family', 'var(--font)');
@@ -95,20 +111,37 @@
 		const curve = d3.curveMonotoneX;
 
 		// Blue starts covering the full area (baseline to top), then shrinks to just the principal sliver
-		const areaFullFlat = d3.area<(typeof stackData)[0]>()
-			.x((d) => x(d.idx)).y0(h).y1(h).curve(curve);
+		const areaFullFlat = d3
+			.area<(typeof stackData)[0]>()
+			.x((d) => x(d.idx))
+			.y0(h)
+			.y1(h)
+			.curve(curve);
 
-		const areaFull = d3.area<(typeof stackData)[0]>()
-			.x((d) => x(d.idx)).y0(h).y1((d) => y(d.interest + d.principal)).curve(curve);
+		const areaFull = d3
+			.area<(typeof stackData)[0]>()
+			.x((d) => x(d.idx))
+			.y0(h)
+			.y1((d) => y(d.interest + d.principal))
+			.curve(curve);
 
-		const areaPrincipal = d3.area<(typeof stackData)[0]>()
-			.x((d) => x(d.idx)).y0((d) => y(d.interest)).y1((d) => y(d.interest + d.principal)).curve(curve);
+		const areaPrincipal = d3
+			.area<(typeof stackData)[0]>()
+			.x((d) => x(d.idx))
+			.y0((d) => y(d.interest))
+			.y1((d) => y(d.interest + d.principal))
+			.curve(curve);
 
-		const areaInterest = d3.area<(typeof stackData)[0]>()
-			.x((d) => x(d.idx)).y0(h).y1((d) => y(d.interest)).curve(curve);
+		const areaInterest = d3
+			.area<(typeof stackData)[0]>()
+			.x((d) => x(d.idx))
+			.y0(h)
+			.y1((d) => y(d.interest))
+			.curve(curve);
 
 		// Yellow (interest)
-		const yellowPath = g.append('path')
+		const yellowPath = g
+			.append('path')
 			.datum(stackData)
 			.attr('fill', '#fbbf24')
 			.attr('opacity', hasAnimated ? 0.7 : 0)
@@ -116,11 +149,7 @@
 
 		if (hasAnimated) {
 			// No animation on re-renders — draw final state directly
-			g.append('path')
-				.datum(stackData)
-				.attr('fill', '#00c4c5')
-				.attr('opacity', 0.7)
-				.attr('d', areaPrincipal);
+			g.append('path').datum(stackData).attr('fill', '#00c4c5').attr('opacity', 0.7).attr('d', areaPrincipal);
 		} else {
 			// Blue (principal) — rises full, shrinks to top, then yellow fills below
 			g.append('path')
@@ -143,8 +172,10 @@
 		}
 
 		// Hover crosshair + tooltip
-		const crosshair = g.append('line')
-			.attr('y1', 0).attr('y2', h)
+		const crosshair = g
+			.append('line')
+			.attr('y1', 0)
+			.attr('y2', h)
 			.attr('stroke', '#9ca3af')
 			.attr('stroke-width', 1)
 			.attr('stroke-dasharray', '3,3')
@@ -154,7 +185,8 @@
 		const tooltip = d3.select(tooltipEl);
 
 		g.append('rect')
-			.attr('width', w).attr('height', h)
+			.attr('width', w)
+			.attr('height', h)
 			.attr('fill', 'transparent')
 			.on('mousemove', (event: MouseEvent) => {
 				const [mx] = d3.pointer(event);
