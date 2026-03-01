@@ -4,7 +4,6 @@
 	import ProjectCard from '$lib/components/ProjectCard.svelte';
 	import ExportImport from '$lib/components/ExportImport.svelte';
 	import { getProjects, addProject, deleteProject } from '$lib/stores/projects.svelte';
-	import { SvelteSet } from 'svelte/reactivity';
 
 	let showNewForm = $state(false);
 	let newName = $state('');
@@ -15,50 +14,8 @@
 	let newEmiMode = $state<'calculate' | 'manual'>('calculate');
 	let newEmiOverride = $state('');
 	let deleteConfirm = $state<string | null>(null);
-	let selectMode = $state<false | 'export' | 'delete'>(false);
-	let selectedIds = new SvelteSet<string>();
-	let showDeleteConfirm = $state(false);
 
 	let projects = $derived(getProjects());
-
-	function startExportSelect() {
-		selectMode = 'export';
-		selectedIds.clear();
-	}
-
-	function startDeleteSelect() {
-		selectMode = 'delete';
-		selectedIds.clear();
-	}
-
-	function cancelSelect() {
-		selectMode = false;
-		selectedIds.clear();
-	}
-
-	function promptBulkDelete() {
-		showDeleteConfirm = true;
-	}
-
-	function confirmBulkDelete() {
-		for (const id of selectedIds) {
-			deleteProject(id);
-		}
-		showDeleteConfirm = false;
-		cancelSelect();
-	}
-
-	function cancelBulkDelete() {
-		showDeleteConfirm = false;
-	}
-
-	function toggleSelect(id: string) {
-		if (selectedIds.has(id)) {
-			selectedIds.delete(id);
-		} else {
-			selectedIds.add(id);
-		}
-	}
 
 	function handleCreate() {
 		if (!newName || !newPrincipal || !newRate || !newTenure) return;
@@ -101,7 +58,7 @@
 </script>
 
 <Header title="Loan Calculator">
-	<ExportImport {selectMode} {selectedIds} onStartExportSelect={startExportSelect} onStartDeleteSelect={startDeleteSelect} onCancelSelect={cancelSelect} onBulkDelete={promptBulkDelete} />
+	<ExportImport />
 </Header>
 
 <main>
@@ -113,27 +70,20 @@
 	{/if}
 
 	<div class="projects-grid">
-		{#each projects as project, i (project.id)}
-			<div style="--float-delay: {i * 0.4}s">
-				<ProjectCard
-					{project}
-					selectMode={!!selectMode}
-					deleteMode={selectMode === 'delete'}
-					selected={selectedIds.has(project.id)}
-					onclick={() => selectMode ? toggleSelect(project.id) : goto(`/project/${project.id}`)}
-					ondelete={() => confirmDelete(project.id)}
-				/>
-			</div>
+		{#each projects as project (project.id)}
+			<ProjectCard
+				{project}
+				onclick={() => goto(`/project/${project.id}`)}
+				ondelete={() => confirmDelete(project.id)}
+			/>
 		{/each}
 	</div>
 
-	{#if deleteConfirm && !selectMode}
+	{#if deleteConfirm}
 		<div class="toast">Click delete again to confirm</div>
 	{/if}
 
-	{#if !selectMode}
-		<button class="fab" onclick={() => (showNewForm = true)}>+</button>
-	{/if}
+	<button class="fab" onclick={() => (showNewForm = true)}>+</button>
 </main>
 
 {#if showNewForm}
@@ -225,37 +175,6 @@
 	</div>
 {/if}
 
-{#if showDeleteConfirm}
-	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-	<div
-		class="modal-backdrop"
-		role="dialog"
-		tabindex="-1"
-		aria-modal="true"
-		aria-label="Confirm Delete"
-		onclick={cancelBulkDelete}
-		onkeydown={(e) => e.key === 'Escape' && cancelBulkDelete()}
-	>
-		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<div class="modal modal-sm" role="document" onclick={(e) => e.stopPropagation()}>
-			<div class="modal-header">
-				<h2 class="modal-title">Delete Projects</h2>
-				<button type="button" class="modal-close" aria-label="Close" onclick={cancelBulkDelete}>
-					<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-						<path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-					</svg>
-				</button>
-			</div>
-			<p class="confirm-text">Are you sure you want to delete {selectedIds.size} project{selectedIds.size !== 1 ? 's' : ''}? This cannot be undone.</p>
-			<div class="form-actions">
-				<button type="button" class="btn btn-cancel" onclick={cancelBulkDelete}>Cancel</button>
-				<button type="button" class="btn btn-danger" onclick={confirmBulkDelete}>Delete</button>
-			</div>
-		</div>
-	</div>
-{/if}
-
 <style>
 	main {
 		padding-bottom: 6rem;
@@ -307,10 +226,6 @@
 		max-height: 90vh;
 		overflow-y: auto;
 		box-shadow: var(--shadow-lg);
-	}
-
-	.modal-sm {
-		max-width: 360px;
 	}
 
 	.modal-header {
@@ -462,22 +377,6 @@
 
 	.btn-cancel:hover {
 		border-color: var(--color-text-secondary);
-	}
-
-	.btn-danger {
-		background: var(--color-danger);
-		color: white;
-	}
-
-	.btn-danger:hover {
-		background: var(--color-danger-hover);
-	}
-
-	.confirm-text {
-		font-size: 0.8125rem;
-		color: var(--color-text-secondary);
-		line-height: 1.5;
-		margin-bottom: 0.25rem;
 	}
 
 	.fab {
