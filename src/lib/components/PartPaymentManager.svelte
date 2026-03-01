@@ -5,19 +5,18 @@
 
 	let { project }: { project: LoanProject } = $props();
 
-	let newMonth = $state(new Date().getMonth() + 1);
-	let newYear = $state(new Date().getFullYear());
+	let newDate = $state(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`);
 	let newAmount = $state('');
 	let editingId = $state<string | null>(null);
-	let editMonth = $state(1);
-	let editYear = $state(2024);
+	let editDate = $state('2024-01');
 	let editAmount = $state('');
 
 	function handleAdd() {
 		if (!newAmount || Number(newAmount) <= 0) return;
+		const [y, m] = newDate.split('-').map(Number);
 		addPartPayment(project.id, {
-			month: newMonth,
-			year: newYear,
+			month: m,
+			year: y,
 			amount: Number(newAmount)
 		});
 		newAmount = '';
@@ -25,16 +24,16 @@
 
 	function startEdit(pp: { id: string; month: number; year: number; amount: number }) {
 		editingId = pp.id;
-		editMonth = pp.month;
-		editYear = pp.year;
+		editDate = `${pp.year}-${String(pp.month).padStart(2, '0')}`;
 		editAmount = String(pp.amount);
 	}
 
 	function saveEdit() {
 		if (!editingId || !editAmount) return;
+		const [y, m] = editDate.split('-').map(Number);
 		updatePartPayment(project.id, editingId, {
-			month: editMonth,
-			year: editYear,
+			month: m,
+			year: y,
 			amount: Number(editAmount)
 		});
 		editingId = null;
@@ -48,14 +47,6 @@
 		[...project.partPayments].sort((a, b) => a.year - b.year || a.month - b.month)
 	);
 
-	const months = [
-		{ value: 1, label: 'Jan' }, { value: 2, label: 'Feb' },
-		{ value: 3, label: 'Mar' }, { value: 4, label: 'Apr' },
-		{ value: 5, label: 'May' }, { value: 6, label: 'Jun' },
-		{ value: 7, label: 'Jul' }, { value: 8, label: 'Aug' },
-		{ value: 9, label: 'Sep' }, { value: 10, label: 'Oct' },
-		{ value: 11, label: 'Nov' }, { value: 12, label: 'Dec' }
-	];
 </script>
 
 <div class="pp-section">
@@ -64,16 +55,8 @@
 		<form onsubmit={(e) => { e.preventDefault(); handleAdd(); }}>
 			<div class="form-row">
 				<div class="field">
-					<label for="pp-month">Month</label>
-					<select id="pp-month" bind:value={newMonth}>
-						{#each months as m}
-							<option value={m.value}>{m.label}</option>
-						{/each}
-					</select>
-				</div>
-				<div class="field">
-					<label for="pp-year">Year</label>
-					<input id="pp-year" type="number" bind:value={newYear} min="2000" max="2060" />
+					<label for="pp-date">Month</label>
+					<input id="pp-date" type="month" bind:value={newDate} min="2000-01" max="2060-12" />
 				</div>
 				<div class="field grow">
 					<label for="pp-amount">Amount</label>
@@ -93,12 +76,7 @@
 				<div class="pp-item" class:editing={editingId === pp.id}>
 					{#if editingId === pp.id}
 						<form class="edit-row" onsubmit={(e) => { e.preventDefault(); saveEdit(); }}>
-							<select bind:value={editMonth}>
-								{#each months as m}
-									<option value={m.value}>{m.label}</option>
-								{/each}
-							</select>
-							<input type="number" bind:value={editYear} min="2000" max="2060" class="year-input" />
+							<input type="month" bind:value={editDate} min="2000-01" max="2060-12" class="date-input" />
 							<input type="number" bind:value={editAmount} min="1" class="amount-input" />
 							<button type="submit" class="btn-icon save" title="Save">
 								<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -188,7 +166,6 @@
 		font-weight: 700;
 	}
 
-	.field select,
 	.field input {
 		padding: 0.5rem 0.625rem;
 		border: 1px solid var(--color-border);
@@ -196,7 +173,6 @@
 		font-size: 0.8125rem;
 	}
 
-	.field select:focus,
 	.field input:focus {
 		outline: none;
 		border-color: var(--color-primary);
@@ -287,7 +263,6 @@
 		width: 100%;
 	}
 
-	.edit-row select,
 	.edit-row input {
 		padding: 0.375rem 0.5rem;
 		border: 1px solid var(--color-border);
@@ -295,7 +270,7 @@
 		font-size: 0.75rem;
 	}
 
-	.year-input { width: 70px; }
+	.date-input { width: 140px; }
 	.amount-input { flex: 1; }
 
 	.empty {

@@ -21,7 +21,7 @@
 		{ id: 'analysis', label: 'Analysis' }
 	];
 
-	let project = $derived(getProject(page.params.id));
+	let project = $derived(getProject(page.params.id!));
 </script>
 
 {#if project}

@@ -2,6 +2,7 @@
 	import type { LoanProject } from '$lib/types';
 	import { calculateEMI, generateAmortization, getPaidEMIs } from '$lib/utils/calculations';
 	import { formatCurrency, formatMonthYear } from '$lib/utils/formatters';
+	import { onMount } from 'svelte';
 
 	let { project }: { project: LoanProject } = $props();
 
@@ -16,21 +17,45 @@
 	let lastRow = $derived(schedule[schedule.length - 1]);
 	let endDate = $derived(lastRow ? formatMonthYear(lastRow.month, lastRow.year) : '—');
 
-	const cards = $derived([
-		{ label: 'Monthly EMI', value: formatCurrency(emi) },
-		{ label: 'Total Interest', value: formatCurrency(totalInterest) },
-		{ label: 'Total Payment', value: formatCurrency(totalPayment) },
-		{ label: 'Paid EMIs', value: `${paidEMIs}` },
-		{ label: 'Remaining', value: `${remainingEMIs} months` },
-		{ label: 'End Date', value: endDate }
+	type Card = { label: string; target: number; format: (n: number) => string; suffix?: string };
+
+	const cards: Card[] = $derived([
+		{ label: 'Monthly EMI', target: emi, format: formatCurrency },
+		{ label: 'Total Interest', target: totalInterest, format: formatCurrency },
+		{ label: 'Total Payment', target: totalPayment, format: formatCurrency },
+		{ label: 'Paid EMIs', target: paidEMIs, format: (n: number) => String(Math.round(n)) },
+		{ label: 'Remaining', target: remainingEMIs, format: (n: number) => String(Math.round(n)), suffix: ' months' },
+		{ label: 'End Date', target: 0, format: () => endDate }
 	]);
+
+	let progress = $state(0);
+	let hasAnimated = false;
+
+	onMount(() => {
+		if (hasAnimated) return;
+		hasAnimated = true;
+		const duration = 800;
+		const start = performance.now();
+		function tick(now: number) {
+			const t = Math.min((now - start) / duration, 1);
+			progress = t < 1 ? t * (2 - t) : 1; // easeOut
+			if (t < 1) requestAnimationFrame(tick);
+		}
+		requestAnimationFrame(tick);
+	});
+
+	function displayValue(card: Card): string {
+		if (card.label === 'End Date') return card.format(0);
+		const val = card.target * progress;
+		return card.format(val) + (card.suffix ?? '');
+	}
 </script>
 
 <div class="summary-grid">
 	{#each cards as card}
 		<div class="summary-card">
 			<span class="label">{card.label}</span>
-			<span class="value">{card.value}</span>
+			<span class="value">{displayValue(card)}</span>
 		</div>
 	{/each}
 </div>

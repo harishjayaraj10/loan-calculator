@@ -10,8 +10,7 @@
 	let newPrincipal = $state('');
 	let newRate = $state('');
 	let newTenure = $state('');
-	let newStartMonth = $state(new Date().getMonth() + 1);
-	let newStartYear = $state(new Date().getFullYear());
+	let newStartDate = $state(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`);
 	let newEmiMode = $state<'calculate' | 'manual'>('calculate');
 	let newEmiOverride = $state('');
 	let deleteConfirm = $state<string | null>(null);
@@ -22,13 +21,14 @@
 		if (!newName || !newPrincipal || !newRate || !newTenure) return;
 		if (newEmiMode === 'manual' && !newEmiOverride) return;
 		const emiOverride = newEmiMode === 'manual' && newEmiOverride ? Number(newEmiOverride) : undefined;
+		const [sYear, sMonth] = newStartDate.split('-').map(Number);
 		const id = addProject({
 			name: newName,
 			principal: Number(newPrincipal),
 			annualRate: Number(newRate),
 			tenureYears: Number(newTenure),
-			startMonth: newStartMonth,
-			startYear: newStartYear,
+			startMonth: sMonth,
+			startYear: sYear,
 			emiOverride
 		});
 		resetForm();
@@ -41,8 +41,7 @@
 		newPrincipal = '';
 		newRate = '';
 		newTenure = '';
-		newStartMonth = new Date().getMonth() + 1;
-		newStartYear = new Date().getFullYear();
+		newStartDate = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
 		newEmiMode = 'calculate';
 		newEmiOverride = '';
 	}
@@ -57,14 +56,6 @@
 		}
 	}
 
-	const months = [
-		{ value: 1, label: 'Jan' }, { value: 2, label: 'Feb' },
-		{ value: 3, label: 'Mar' }, { value: 4, label: 'Apr' },
-		{ value: 5, label: 'May' }, { value: 6, label: 'Jun' },
-		{ value: 7, label: 'Jul' }, { value: 8, label: 'Aug' },
-		{ value: 9, label: 'Sep' }, { value: 10, label: 'Oct' },
-		{ value: 11, label: 'Nov' }, { value: 12, label: 'Dec' }
-	];
 </script>
 
 <Header title="Loan Calculator">
@@ -97,7 +88,10 @@
 </main>
 
 {#if showNewForm}
-	<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="New Project" onclick={resetForm} onkeydown={(e) => e.key === 'Escape' && resetForm()}>
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<div class="modal-backdrop" role="dialog" tabindex="-1" aria-modal="true" aria-label="New Project" onclick={resetForm} onkeydown={(e) => e.key === 'Escape' && resetForm()}>
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div class="modal" role="document" onclick={(e) => e.stopPropagation()}>
 			<div class="modal-header">
 				<h2 class="modal-title">New Project</h2>
@@ -126,16 +120,8 @@
 						<input id="tenure" type="number" bind:value={newTenure} placeholder="20" min="1" max="40" required />
 					</div>
 					<div class="field">
-						<label for="startMonth">Start Month</label>
-						<select id="startMonth" bind:value={newStartMonth}>
-							{#each months as m}
-								<option value={m.value}>{m.label}</option>
-							{/each}
-						</select>
-					</div>
-					<div class="field">
-						<label for="startYear">Start Year</label>
-						<input id="startYear" type="number" bind:value={newStartYear} min="2000" max="2050" />
+						<label for="startDate">Start Month</label>
+						<input id="startDate" type="month" bind:value={newStartDate} min="2000-01" max="2050-12" />
 					</div>
 				</div>
 
@@ -279,8 +265,7 @@
 		font-weight: 700;
 	}
 
-	.field input,
-	.field select {
+	.field input {
 		padding: 0.625rem 0.75rem;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-sm);
@@ -289,8 +274,7 @@
 		transition: border-color 0.15s;
 	}
 
-	.field input:focus,
-	.field select:focus {
+	.field input:focus {
 		outline: none;
 		border-color: var(--color-primary);
 	}
