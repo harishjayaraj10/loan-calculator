@@ -136,27 +136,23 @@ export function importProjects(data: ExportData): number {
 
 	let count = 0;
 	for (const p of data.projects) {
-		const id = generateId();
-		const project: LoanProject = {
-			id,
+		const projectId = addProject({
 			name: p.name,
 			principal: p.principal,
 			annualRate: p.annualRate,
 			tenureYears: p.tenureYears,
 			startMonth: p.startMonth,
 			startYear: p.startYear,
-			...(p.emiOverride && { emiOverride: p.emiOverride }),
-			partPayments: p.partPayments.map((pp) => ({
-				id: generateId(),
+			...(p.emiOverride && { emiOverride: p.emiOverride })
+		});
+		for (const pp of p.partPayments || []) {
+			addPartPayment(projectId, {
 				month: pp.month,
 				year: pp.year,
 				amount: pp.amount
-			})),
-			createdAt: Date.now()
-		};
-		projects.push(project);
+			});
+		}
 		count++;
 	}
-	saveToStorage(projects);
 	return count;
 }
