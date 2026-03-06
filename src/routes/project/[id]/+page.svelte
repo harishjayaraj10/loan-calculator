@@ -8,6 +8,7 @@
 	import SummaryCards from '$lib/components/SummaryCards.svelte';
 	import AmortizationTable from '$lib/components/AmortizationTable.svelte';
 	import PartPaymentManager from '$lib/components/PartPaymentManager.svelte';
+	import StepUpEmiManager from '$lib/components/StepUpEmiManager.svelte';
 	import BalanceChart from '$lib/components/Charts/BalanceChart.svelte';
 	import InterestPrincipalChart from '$lib/components/Charts/InterestPrincipalChart.svelte';
 	import SavingsComparison from '$lib/components/Charts/SavingsComparison.svelte';
@@ -18,6 +19,7 @@
 	const tabs = [
 		{ id: 'overview', label: 'Overview' },
 		{ id: 'partpayments', label: 'Part Payments' },
+		{ id: 'stepup', label: 'Step Up EMI' },
 		{ id: 'amortization', label: 'Amortization' },
 		{ id: 'analysis', label: 'Analysis' }
 	];
@@ -38,6 +40,10 @@
 				<SummaryCards {project} />
 				<div class="spacer"></div>
 				<LoanForm {project} />
+			</div>
+		{:else if activeTab === 'stepup'}
+			<div class="tab-content">
+				<StepUpEmiManager {project} />
 			</div>
 		{:else if activeTab === 'amortization'}
 			<div class="tab-content">

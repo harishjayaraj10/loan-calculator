@@ -1,4 +1,4 @@
-import type { LoanProject, PartPayment, ExportData } from '$lib/types';
+import type { LoanProject, PartPayment, StepUpEmi, ExportData } from '$lib/types';
 import { generateId } from '$lib/utils/calculations';
 
 const STORAGE_KEY = 'loan-calculator-projects';
@@ -23,7 +23,10 @@ let initialized = false;
 
 export function initStore() {
 	if (initialized) return;
-	projects = loadFromStorage();
+	projects = loadFromStorage().map((p) => ({
+		...p,
+		stepUpEmis: p.stepUpEmis || []
+	}));
 	initialized = true;
 }
 
@@ -49,6 +52,7 @@ export function addProject(data: {
 		...data,
 		id,
 		partPayments: [],
+		stepUpEmis: [],
 		createdAt: Date.now()
 	};
 	projects.push(project);
@@ -56,7 +60,7 @@ export function addProject(data: {
 	return id;
 }
 
-export function updateProject(id: string, data: Partial<Omit<LoanProject, 'id' | 'createdAt' | 'partPayments'>>) {
+export function updateProject(id: string, data: Partial<Omit<LoanProject, 'id' | 'createdAt' | 'partPayments' | 'stepUpEmis'>>) {
 	const idx = projects.findIndex((p) => p.id === id);
 	if (idx === -1) return;
 	projects[idx] = { ...projects[idx], ...data };
@@ -107,6 +111,43 @@ export function updatePartPayment(
 	saveToStorage(projects);
 }
 
+export function addStepUpEmi(
+	projectId: string,
+	data: { month: number; year: number; newEmi: number }
+): string | null {
+	const project = projects.find((p) => p.id === projectId);
+	if (!project) return null;
+	const id = generateId();
+	const stepUp: StepUpEmi = { ...data, id };
+	project.stepUpEmis.push(stepUp);
+	saveToStorage(projects);
+	return id;
+}
+
+export function removeStepUpEmi(projectId: string, stepUpId: string) {
+	const project = projects.find((p) => p.id === projectId);
+	if (!project) return;
+	const idx = project.stepUpEmis.findIndex((s) => s.id === stepUpId);
+	if (idx === -1) return;
+	project.stepUpEmis.splice(idx, 1);
+	saveToStorage(projects);
+}
+
+export function updateStepUpEmi(
+	projectId: string,
+	stepUpId: string,
+	data: { month: number; year: number; newEmi: number }
+) {
+	const project = projects.find((p) => p.id === projectId);
+	if (!project) return;
+	const stepUp = project.stepUpEmis.find((s) => s.id === stepUpId);
+	if (!stepUp) return;
+	stepUp.month = data.month;
+	stepUp.year = data.year;
+	stepUp.newEmi = data.newEmi;
+	saveToStorage(projects);
+}
+
 export function exportProjects(projectIds?: string[]): ExportData {
 	const toExport = projectIds ? projects.filter((p) => projectIds.includes(p.id)) : projects;
 
@@ -124,7 +165,14 @@ export function exportProjects(projectIds?: string[]): ExportData {
 				month: pp.month,
 				year: pp.year,
 				amount: pp.amount
-			}))
+			})),
+			...(p.stepUpEmis.length > 0 && {
+				stepUpEmis: p.stepUpEmis.map((s) => ({
+					month: s.month,
+					year: s.year,
+					newEmi: s.newEmi
+				}))
+			})
 		}))
 	};
 }
@@ -150,6 +198,13 @@ export function importProjects(data: ExportData): number {
 				month: pp.month,
 				year: pp.year,
 				amount: pp.amount
+			});
+		}
+		for (const s of p.stepUpEmis || []) {
+			addStepUpEmi(projectId, {
+				month: s.month,
+				year: s.year,
+				newEmi: s.newEmi
 			});
 		}
 		count++;

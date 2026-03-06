@@ -8,6 +8,7 @@ export interface LoanProject {
 	startYear: number;
 	emiOverride?: number;
 	partPayments: PartPayment[];
+	stepUpEmis: StepUpEmi[];
 	createdAt: number;
 }
 
@@ -16,6 +17,13 @@ export interface PartPayment {
 	month: number;
 	year: number;
 	amount: number;
+}
+
+export interface StepUpEmi {
+	id: string;
+	month: number;
+	year: number;
+	newEmi: number;
 }
 
 export interface AmortizationRow {
@@ -44,6 +52,7 @@ export interface ExportProject {
 	startYear: number;
 	emiOverride?: number;
 	partPayments: { month: number; year: number; amount: number }[];
+	stepUpEmis?: { month: number; year: number; newEmi: number }[];
 }
 
 export interface SavingsAnalysis {

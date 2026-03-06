@@ -7,6 +7,10 @@
 
 	let schedule = $derived(generateAmortization(project, true));
 	let paidCount = $derived(getPaidEMIs(project));
+
+	let stepUpMonths = $derived(
+		new Set((project.stepUpEmis || []).map((s) => `${s.year}-${s.month}`))
+	);
 </script>
 
 <div class="table-wrapper">
@@ -20,12 +24,14 @@
 				<th>Interest</th>
 				<th>Principal</th>
 				<th>Part Pmt.</th>
+				<th>Step Up</th>
 				<th>Closing Bal.</th>
 			</tr>
 		</thead>
 		<tbody>
 			{#each schedule as row, i}
-				<tr class:paid={i < paidCount} class:has-part-payment={row.partPayment > 0}>
+				{@const isStepUp = stepUpMonths.has(`${row.year}-${row.month}`)}
+				<tr class:paid={i < paidCount} class:has-part-payment={row.partPayment > 0} class:has-step-up={isStepUp}>
 					<td class="num">{row.monthIndex + 1}</td>
 					<td class="month">{formatMonthYear(row.month, row.year)}</td>
 					<td class="amount">{formatCurrency(row.openingBalance)}</td>
@@ -33,6 +39,7 @@
 					<td class="amount">{formatCurrency(row.interest)}</td>
 					<td class="amount">{formatCurrency(row.principal)}</td>
 					<td class="amount part-payment">{row.partPayment > 0 ? formatCurrency(row.partPayment) : '—'}</td>
+					<td class="amount step-up">{isStepUp ? formatCurrency(row.emi) : '—'}</td>
 					<td class="amount">{formatCurrency(row.closingBalance)}</td>
 				</tr>
 			{/each}
@@ -106,5 +113,19 @@
 
 	.has-part-payment {
 		border-left: 3px solid var(--color-primary);
+	}
+
+	.has-step-up {
+		border-left: 3px solid var(--color-warning);
+	}
+
+	.has-part-payment.has-step-up {
+		border-left: 3px solid var(--color-primary);
+		border-right: 3px solid var(--color-warning);
+	}
+
+	.step-up {
+		color: var(--color-warning);
+		font-weight: 700;
 	}
 </style>

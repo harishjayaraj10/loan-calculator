@@ -1,4 +1,4 @@
-import type { AmortizationRow, LoanProject, PartPayment, SavingsAnalysis } from '$lib/types';
+import type { AmortizationRow, LoanProject, SavingsAnalysis } from '$lib/types';
 
 export function calculateEMI(principal: number, annualRate: number, tenureYears: number): number {
 	const r = annualRate / 12 / 100;
@@ -37,6 +37,24 @@ export function generateAmortization(project: LoanProject, includePartPayments: 
 		}
 	}
 
+	// Step-up EMIs: sorted by date so we can determine the active EMI at any month.
+	// Each step-up replaces the EMI from that month onwards.
+	const stepUps = includePartPayments
+		? [...(project.stepUpEmis || [])].sort((a, b) => a.year - b.year || a.month - b.month)
+		: [];
+
+	function getActiveEmi(month: number, year: number): number {
+		let active = emi;
+		for (const s of stepUps) {
+			if (s.year < year || (s.year === year && s.month <= month)) {
+				active = s.newEmi;
+			} else {
+				break;
+			}
+		}
+		return active;
+	}
+
 	for (let i = 0; i < n * 2 && balance > 0.01; i++) {
 		// Apply part payment effect (paid previous month, reduces balance this month)
 		const effectKey = `${currentYear}-${currentMonth}`;
@@ -45,8 +63,9 @@ export function generateAmortization(project: LoanProject, includePartPayments: 
 		if (balance < 0.01) balance = 0;
 		if (balance === 0) break;
 
+		const currentEmi = getActiveEmi(currentMonth, currentYear);
 		const interest = balance * r;
-		let principalPortion = emi - interest;
+		let principalPortion = currentEmi - interest;
 
 		if (principalPortion > balance) {
 			principalPortion = balance;
@@ -64,7 +83,7 @@ export function generateAmortization(project: LoanProject, includePartPayments: 
 			month: currentMonth,
 			year: currentYear,
 			openingBalance: balance,
-			emi: principalPortion + interest > balance + interest ? balance + interest : emi,
+			emi: principalPortion + interest > balance + interest ? balance + interest : currentEmi,
 			interest,
 			principal: principalPortion,
 			partPayment: ppDisplay,
@@ -124,6 +143,38 @@ export function getPaidEMIs(project: LoanProject): number {
 	}
 
 	return count;
+}
+
+export function getEffectiveEmi(project: LoanProject, month: number, year: number): number {
+	const calculatedEmi = calculateEMI(project.principal, project.annualRate, project.tenureYears);
+	const baseEmi = project.emiOverride || calculatedEmi;
+	const stepUps = [...(project.stepUpEmis || [])].sort((a, b) => a.year - b.year || a.month - b.month);
+	let active = baseEmi;
+	for (const s of stepUps) {
+		if (s.year < year || (s.year === year && s.month <= month)) {
+			active = s.newEmi;
+		} else {
+			break;
+		}
+	}
+	return active;
+}
+
+export function getMinStepUpEmi(project: LoanProject, month: number, year: number, excludeId?: string): number {
+	const calculatedEmi = calculateEMI(project.principal, project.annualRate, project.tenureYears);
+	const baseEmi = project.emiOverride || calculatedEmi;
+	const stepUps = [...(project.stepUpEmis || [])]
+		.filter((s) => s.id !== excludeId)
+		.sort((a, b) => a.year - b.year || a.month - b.month);
+	let active = baseEmi;
+	for (const s of stepUps) {
+		if (s.year < year || (s.year === year && s.month <= month)) {
+			active = s.newEmi;
+		} else {
+			break;
+		}
+	}
+	return active;
 }
 
 export function generateId(): string {
