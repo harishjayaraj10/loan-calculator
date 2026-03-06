@@ -95,5 +95,15 @@
 		.summary-grid {
 			grid-template-columns: repeat(2, 1fr);
 		}
+
+		.value {
+			font-size: 0.8125rem;
+		}
+	}
+
+	@media (max-width: 374px) {
+		.summary-grid {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>

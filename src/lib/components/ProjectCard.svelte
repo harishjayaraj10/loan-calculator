@@ -241,4 +241,15 @@
 		border-radius: 2px;
 		transition: width 0.3s ease;
 	}
+
+	@media (max-width: 640px) {
+		.card-body {
+			flex-wrap: wrap;
+			gap: 0.75rem;
+		}
+
+		.stat {
+			min-width: 0;
+		}
+	}
 </style>

@@ -64,6 +64,16 @@
 		transform: translateX(-50%);
 		pointer-events: none;
 		white-space: nowrap;
+		max-width: 60%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	@media (max-width: 640px) {
+		.header-title {
+			font-size: 1rem;
+			max-width: 50%;
+		}
 	}
 
 	.header-right {

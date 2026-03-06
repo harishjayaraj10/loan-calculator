@@ -38,6 +38,21 @@
 		flex-shrink: 0;
 	}
 
+	.tab-bar::-webkit-scrollbar {
+		display: none;
+	}
+
+	.tab-bar {
+		scrollbar-width: none;
+	}
+
+	@media (max-width: 640px) {
+		.tab {
+			padding: 0.625rem 0.625rem;
+			font-size: 0.75rem;
+		}
+	}
+
 	.tab:hover {
 		color: var(--color-text);
 	}

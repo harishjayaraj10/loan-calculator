@@ -415,5 +415,26 @@
 		.field.grow {
 			min-width: auto;
 		}
+
+		.su-info {
+			gap: 0.75rem;
+		}
+
+		.su-date {
+			min-width: 70px;
+			font-size: 0.75rem;
+		}
+
+		.su-emi {
+			font-size: 0.8125rem;
+		}
+
+		.edit-fields {
+			flex-wrap: wrap;
+		}
+
+		.date-input {
+			width: 120px;
+		}
 	}
 </style>

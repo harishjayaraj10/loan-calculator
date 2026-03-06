@@ -329,5 +329,26 @@
 		.field.grow {
 			min-width: auto;
 		}
+
+		.pp-info {
+			gap: 0.75rem;
+		}
+
+		.pp-date {
+			min-width: 70px;
+			font-size: 0.75rem;
+		}
+
+		.pp-amount {
+			font-size: 0.8125rem;
+		}
+
+		.edit-row {
+			flex-wrap: wrap;
+		}
+
+		.date-input {
+			width: 120px;
+		}
 	}
 </style>

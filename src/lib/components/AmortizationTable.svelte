@@ -128,4 +128,23 @@
 		color: var(--color-warning);
 		font-weight: 700;
 	}
+
+	@media (max-width: 640px) {
+		table {
+			font-size: 0.625rem;
+		}
+
+		th {
+			padding: 0.5rem 0.375rem;
+			font-size: 0.5625rem;
+		}
+
+		td {
+			padding: 0.375rem 0.375rem;
+		}
+
+		.num {
+			width: 2rem;
+		}
+	}
 </style>
