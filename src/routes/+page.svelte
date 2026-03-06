@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import Header from '$lib/components/Header.svelte';
 	import ProjectCard from '$lib/components/ProjectCard.svelte';
 	import ExportImport from '$lib/components/ExportImport.svelte';
@@ -75,7 +76,7 @@
 			emiOverride
 		});
 		resetForm();
-		goto(`/project/${id}`);
+		goto(`${base}/project/${id}`);
 	}
 
 	function resetForm() {
@@ -127,7 +128,7 @@
 					selectMode={!!selectMode}
 					deleteMode={selectMode === 'delete'}
 					selected={selectedIds.has(project.id)}
-					onclick={() => (selectMode ? toggleSelect(project.id) : goto(`/project/${project.id}`))}
+					onclick={() => (selectMode ? toggleSelect(project.id) : goto(`${base}/project/${project.id}`))}
 					ondelete={() => confirmDelete(project.id)}
 				/>
 			</div>

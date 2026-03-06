@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import Header from '$lib/components/Header.svelte';
 	import TabBar from '$lib/components/TabBar.svelte';
@@ -25,7 +26,7 @@
 </script>
 
 {#if project}
-	<Header title={project.name} showBack onback={() => goto('/')}>
+	<Header title={project.name} showBack onback={() => goto(`${base}/`)}>
 		<span class="rate-badge">{project.annualRate}%</span>
 	</Header>
 
@@ -55,10 +56,10 @@
 		{/if}
 	</main>
 {:else}
-	<Header title="Not Found" showBack onback={() => goto('/')} />
+	<Header title="Not Found" showBack onback={() => goto(`${base}/`)} />
 	<div class="not-found">
 		<p>Project not found</p>
-		<button class="link-btn" onclick={() => goto('/')}>Go back to projects</button>
+		<button class="link-btn" onclick={() => goto(`${base}/`)}>Go back to projects</button>
 	</div>
 {/if}
 

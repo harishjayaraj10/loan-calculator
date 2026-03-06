@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '@fontsource/cascadia-mono/400.css';
 	import '@fontsource/cascadia-mono/700.css';
+	import { base } from '$app/paths';
 	import { initStore } from '$lib/stores/projects.svelte';
 	import { onMount } from 'svelte';
 
@@ -13,7 +14,7 @@
 
 <svelte:head>
 	<title>Loan Calculator</title>
-	<link rel="icon" href="/favicon.svg" />
+	<link rel="icon" href="{base}/favicon.svg" />
 	<meta name="description" content="Home loan calculator with amortization and part payment analysis" />
 </svelte:head>
 
