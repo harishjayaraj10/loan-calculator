@@ -17,8 +17,8 @@
 
 	const tabs = [
 		{ id: 'overview', label: 'Overview' },
-		{ id: 'amortization', label: 'Amortization' },
 		{ id: 'partpayments', label: 'Part Payments' },
+		{ id: 'amortization', label: 'Amortization' },
 		{ id: 'analysis', label: 'Analysis' }
 	];
 
